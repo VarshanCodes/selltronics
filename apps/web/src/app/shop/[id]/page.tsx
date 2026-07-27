@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc, addDoc, collection, serverTimestamp, updateDoc } from "firebase/firestore";
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, type User } from "firebase/auth";
 import Link from "next/link";
 import { db } from "../../../config/firebase";
+import { auth } from "../../../config/firebase";
 
 interface ProductDetails {
   id: string;
@@ -34,6 +36,18 @@ export default function ProductPage() {
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+  const [ordering, setOrdering] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => onAuthStateChanged(auth, (signedInUser) => {
+    setUser(signedInUser);
+    if (signedInUser) setFormData((current) => ({ ...current, customerName: current.customerName || signedInUser.displayName || '', customerEmail: current.customerEmail || signedInUser.email || '' }));
+  }), []);
+
+  const signInWithGoogle = async () => {
+    try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+    catch (error) { console.error('Google sign-in failed:', error); alert('Google sign-in could not be completed. Please try again.'); }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -73,6 +87,7 @@ export default function ProductPage() {
         whatsappNumber: formData.whatsappNumber,
         customerEmail: formData.customerEmail,
         deliveryAddress: formData.deliveryAddress,
+        userId: user?.uid || null,
         status: "Pending Delivery",
         createdAt: serverTimestamp(),
       });
@@ -101,7 +116,7 @@ export default function ProductPage() {
           <p className="mt-3 text-[#6E6683]">Your order reference is below. Keep it safe for tracking.</p>
           <div className="mt-6 rounded-2xl bg-[#F3ECFF] p-4 font-mono text-lg font-semibold text-[#7C3AED]">{orderId}</div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link href="/track-purchase" className="rounded-xl bg-[#1E1B29] px-5 py-3 font-bold text-white">Track Order</Link>
+            <Link href={`/track-purchase?order=${orderId}`} className="rounded-xl bg-[#1E1B29] px-5 py-3 font-bold text-white">Track Order</Link>
             <Link href="/shop" className="rounded-xl border border-[#E3D9F9] px-5 py-3 font-bold text-[#1E1B29]">Back to Shop</Link>
           </div>
         </div>
@@ -205,7 +220,8 @@ export default function ProductPage() {
               </div>
             </div>
 
-            <form onSubmit={handleSubmitOrder} className="space-y-4">
+            {!ordering ? <button type="button" onClick={() => setOrdering(true)} className="w-full rounded-xl bg-[#5B21B6] py-4 font-bold text-white transition-colors hover:bg-[#3D1E7A]">Buy now</button> : !user ? <div className="rounded-2xl border border-[#E3D9F9] bg-[#FAF7FF] p-5 text-center"><h2 className="text-lg font-bold text-[#1E1B29]">Sign in to continue</h2><p className="mt-2 text-sm text-[#6E6683]">Use your Google account to continue securely to delivery details.</p><button type="button" onClick={signInWithGoogle} className="mt-4 w-full rounded-xl border border-[#E3D9F9] bg-white py-3 font-bold text-[#1E1B29] hover:bg-[#F3ECFF]"><span aria-hidden="true">G</span> Continue with Google</button><button type="button" onClick={() => setOrdering(false)} className="mt-3 text-sm font-semibold text-[#5B21B6]">Back to device details</button></div> : <form onSubmit={handleSubmitOrder} className="space-y-4">
+              <p className="text-sm font-semibold text-[#5B21B6]">Signed in as {user.displayName || user.email}</p>
               <input required value={formData.customerName} onChange={(e) => setFormData({...formData, customerName: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3" placeholder="Full name" />
               <input required value={formData.customerPhone} onChange={(e) => setFormData({...formData, customerPhone: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3" placeholder="Phone number" />
               <input required value={formData.whatsappNumber} onChange={(e) => setFormData({...formData, whatsappNumber: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3" placeholder="WhatsApp number" />
@@ -214,7 +230,7 @@ export default function ProductPage() {
               <button type="submit" disabled={submitting} className="w-full rounded-xl bg-[#5B21B6] py-4 font-bold text-white transition-colors hover:bg-[#3D1E7A] disabled:opacity-70">
                 {submitting ? "Placing order..." : "Place COD order"}
               </button>
-            </form>
+            </form>}
             <p className="mt-4 text-center text-[0.8rem] text-[#A79CBE]">
               Includes 6-month warranty and free shipping.
             </p>

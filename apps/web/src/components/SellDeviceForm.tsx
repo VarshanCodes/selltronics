@@ -5,10 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
-import { imageFilesToDataUrls } from '../utils/imageData';
 
 type DeviceType = 'Smartphones' | 'Laptops' | 'Tablets' | 'Mac' | 'Other devices';
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type Step = 1 | 2 | 3 | 4 | 5 | 6;
 type Brand = { name: string; logo?: string; mark?: string };
 type CategoryCopy = {
   eyebrow: string;
@@ -228,28 +227,17 @@ const defects = [
 ];
 
 const mobileProblems = [
-  'Front camera not working',
-  'Back camera not working',
-  'Volume button not working',
-  'Finger touch not working',
-  'WiFi not working',
-  'Battery faulty',
-  'Speaker faulty',
-  'Power button not working',
-  'Charging port not working',
-  'Face sensor not working',
-  'Silent button not working',
-  'Audio receiver not working',
-  'Camera glass broken',
-  'Bluetooth not working',
-  'Vibrator is not working',
-  'Microphone not working',
-  'Proximity sensor not working',
+  'Front Camera Not Working', 'Back Camera Not Working', 'Volume Button Not Working',
+  'Power Button Not Working', 'Silent Switch Not Working', 'Finger Touch Not Working',
+  'Face ID / Face Sensor Not Working', 'Proximity Sensor Not Working', 'Wi-Fi Not Working',
+  'Bluetooth Not Working', 'Battery Faulty', 'Charging Port Not Working', 'Speaker Not Working',
+  'Audio Receiver (Earpiece) Not Working', 'Microphone Not Working', 'Vibrator Not Working',
+  'Camera Glass Broken',
 ];
 
 const problemsByCategory: Record<DeviceType, string[]> = {
   Smartphones: mobileProblems,
-  Tablets: mobileProblems.filter((item) => item !== 'Silent button not working' && item !== 'Face sensor not working'),
+  Tablets: mobileProblems.filter((item) => item !== 'Silent Switch Not Working' && item !== 'Face ID / Face Sensor Not Working'),
   Laptops: [
     'Front camera not working',
     'Keyboard not working',
@@ -342,23 +330,13 @@ export default function SellDeviceForm() {
   const update = (field: keyof typeof form, value: string | string[] | Record<string, string>) => setForm((current) => ({ ...current, [field]: value }));
   const toggle = (field: 'defects' | 'problems' | 'accessories', value: string) => setForm((current) => ({ ...current, [field]: current[field].includes(value) ? current[field].filter((item) => item !== value) : [...current[field], value] }));
   const goBack = () => setStep((current) => Math.max(1, current - 1) as Step);
-  const goNext = () => setStep((current) => Math.min(8, current + 1) as Step);
+  const goNext = () => setStep((current) => Math.min(6, current + 1) as Step);
 
   const canContinue =
     step === 1 ? Boolean(form.brand) :
     step === 2 ? Boolean(form.deviceName.trim() && form.storage && form.ram) :
     step === 3 ? currentQuestions.every(([key]) => form.conditionAnswers[key]) :
     true;
-
-  const uploadImages = async (files: FileList | null) => {
-    try {
-      const images = await imageFilesToDataUrls(files);
-      update('images', images);
-      setError('');
-    } catch (issue) {
-      setError(issue instanceof Error ? issue.message : 'Unable to use this image.');
-    }
-  };
 
   const signInWithGoogle = async () => {
     try {
@@ -378,6 +356,7 @@ export default function SellDeviceForm() {
     try {
       const result = await addDoc(collection(db, 'sellRequests'), {
         ...form,
+        userId: auth.currentUser?.uid || null,
         expectedPrice: Number(form.expectedPrice),
         status: 'pickup_requested',
         paymentStatus: 'pending_inspection',
@@ -400,8 +379,8 @@ export default function SellDeviceForm() {
   return <form onSubmit={submit} className="sell-form-card">
     <div className="sell-form-heading">
       <span className="eyebrow">{currentCopy.eyebrow}</span>
-      <h2>{step === 1 ? currentCopy.title : step === 2 ? 'Enter your device model.' : step === 3 ? 'Tell us more about your device.' : step === 4 ? 'Device condition and accessories.' : step === 5 ? 'Functional or physical problems' : step === 6 ? 'Do you have the following?' : step === 7 ? 'Upload device image' : 'Your pickup details.'}</h2>
-      <p>{step === 1 ? currentCopy.description : step === 2 ? 'Choose the storage and RAM options for an accurate inspection quote.' : step === 3 ? 'These answers help us prepare an accurate inspection quote.' : step === 4 ? 'Select everything that applies. Final value is confirmed at pickup.' : step === 5 ? 'Please choose appropriate conditions to get an accurate quote.' : step === 6 ? 'Tell us what you can provide at pickup.' : step === 7 ? 'Add clear photos of your device to help us prepare for pickup.' : 'Sign in with Google if you want, then add expected price and location details.'}</p>
+      <h2>{step === 1 ? currentCopy.title : step === 2 ? 'Enter your device model.' : step === 3 ? 'Tell us more about your device.' : step === 4 ? 'Device condition and accessories.' : step === 5 ? 'Functional or Physical Problems' : 'Your pickup details.'}</h2>
+      <p>{step === 1 ? currentCopy.description : step === 2 ? 'Choose the storage and RAM options for an accurate inspection quote.' : step === 3 ? 'These answers help us prepare an accurate inspection quote.' : step === 4 ? 'Select everything that applies. Final value is confirmed at pickup.' : step === 5 ? 'Please select all applicable issues to receive an accurate quote.' : 'Sign in with Google if you want, then add expected price and location details.'}</p>
     </div>
 
     {step === 1 && <div style={{ marginTop: 22 }}>
@@ -423,14 +402,10 @@ export default function SellDeviceForm() {
 
     {step === 4 && <div className="field" style={{ marginTop: 22 }}><span>Select screen/body defects that apply</span>{defects.map((item) => <label key={item} style={{ display: 'block', marginTop: 10 }}><input type="checkbox" checked={form.defects.includes(item)} onChange={() => toggle('defects', item)} /> {item}</label>)}</div>}
 
-    {step === 5 && <div className="field" style={{ marginTop: 22 }}><span>Functional or physical problems</span><small>Please choose appropriate conditions to get an accurate quote.</small><div style={{ columns: '2 220px', marginTop: 8 }}>{currentProblems.map((item) => <label key={item} style={{ display: 'block', marginTop: 8 }}><input type="checkbox" checked={form.problems.includes(item)} onChange={() => toggle('problems', item)} /> {item}</label>)}</div></div>}
+    {step === 5 && <div className="field" style={{ marginTop: 22 }}><span>Functional or Physical Problems</span><small>Please select all applicable issues to receive an accurate quote.</small><div className="problem-options">{currentProblems.map((item) => <label key={item} className="problem-option"><input type="checkbox" checked={form.problems.includes(item)} onChange={() => toggle('problems', item)} /><span>{item}</span></label>)}</div></div>}
 
-    {step === 6 && <div className="field" style={{ marginTop: 22 }}><span>Do you have the following?</span>{['Original box with same IMEI / serial number', 'Device images (up to 700 KB each)'].map((item) => <label key={item} style={{ display: 'block', marginTop: 10 }}><input type="checkbox" checked={form.accessories.includes(item)} onChange={() => toggle('accessories', item)} /> {item}</label>)}</div>}
-
-    {step === 7 && <div className="field" style={{ marginTop: 22 }}><span>Device images (up to 700 KB each)</span><input type="file" accept="image/*" multiple onChange={(e) => uploadImages(e.target.files)} /><small>{form.images.length ? `${form.images.length} image(s) added.` : 'No file chosen. Add clear images of your device.'}</small></div>}
-
-    {step === 8 && <div className="sell-form-grid">
-      <div style={{ gridColumn: '1/-1' }}><button type="button" className="btn-ghost" onClick={signInWithGoogle}>Continue with Google</button></div>
+    {step === 6 && <div className="sell-form-grid">
+      <div style={{ gridColumn: '1/-1' }}><button type="button" className="btn-ghost" onClick={signInWithGoogle}><span aria-hidden="true">G</span> Continue with Google</button></div>
       <label className="field"><span>Expected price (Rs.)</span><input required type="number" min="0" value={form.expectedPrice} onChange={(e) => update('expectedPrice', e.target.value)} placeholder="e.g. 25000" /></label>
       <label className="field"><span>Your name</span><input required value={form.userName} onChange={(e) => update('userName', e.target.value)} /></label>
       <label className="field"><span>Phone number</span><input required type="tel" value={form.customerPhone} onChange={(e) => update('customerPhone', e.target.value)} placeholder="10-digit mobile number" /></label>
@@ -445,7 +420,7 @@ export default function SellDeviceForm() {
     {error && <p className="track-error">{error}</p>}
     <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
       {step > 1 && <button className="btn-ghost" type="button" onClick={goBack}>Back</button>}
-      {step < 8 ? (canContinue && <button className="btn-primary" type="button" onClick={goNext}>Continue -&gt;</button>) : <button className="btn-primary sell-submit" disabled={loading}>{loading ? 'Saving your request...' : 'Request pickup -&gt;'}</button>}
+      {step < 6 ? (canContinue && <button className="btn-primary" type="button" onClick={goNext}>Continue →</button>) : <button className="btn-primary sell-submit" disabled={loading}>{loading ? 'Saving your request...' : 'Request pickup →'}</button>}
     </div>
   </form>;
 }

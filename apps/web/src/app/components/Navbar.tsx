@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { useEffect, useId, useRef, useState } from 'react';
+import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
+import { auth } from '../../config/firebase';
 
 const links = [
   { label: 'Sell a device', href: '/sell' },
@@ -27,12 +29,19 @@ function ChevronIcon() {
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const drawerId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
   const isActive = (href: string) => href !== '/#why' && pathname === href;
   const close = () => setOpen(false);
+
+  useEffect(() => onAuthStateChanged(auth, setUser), []);
+  const logout = async () => {
+    await signOut(auth);
+    close();
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -63,9 +72,14 @@ export default function Navbar() {
         <button className="site-menu-overlay" type="button" onClick={close} aria-label="Close navigation menu" />
         <aside ref={drawerRef} id={drawerId} className="site-drawer" aria-label="Navigation menu" aria-modal="true" role="dialog">
           <div className="drawer-head"><span className="site-logo"><BrandMark /> <span>Selltronics</span></span><button ref={closeRef} type="button" onClick={close} aria-label="Close navigation menu"><CloseIcon /></button></div>
-          <p className="drawer-intro">Everything you need to buy, sell, and track your device.</p>
-          <nav aria-label="Mobile navigation">{links.map((link) => <Link key={link.href} href={link.href} onClick={close} aria-current={isActive(link.href) ? 'page' : undefined}><span>{link.label}</span><ChevronIcon /></Link>)}</nav>
-          <Link href="/sell" className="drawer-cta" onClick={close}>Get an instant quote</Link>
+        <div className="drawer-account">
+          <span>{user?.displayName?.slice(0, 1).toUpperCase() || 'G'}</span>
+          <div><b>{user?.displayName || 'Guest'}</b><small>{user?.email || 'Sign in during checkout to save your details.'}</small></div>
+        </div>
+        <p className="drawer-intro">Everything you need to buy, sell, and track your device.</p>
+        <nav aria-label="Mobile navigation">{links.map((link) => <Link key={link.href} href={link.href} onClick={close} aria-current={isActive(link.href) ? 'page' : undefined}><span>{link.label}</span><ChevronIcon /></Link>)}</nav>
+        <Link href="/sell" className="drawer-cta" onClick={close}>Get an instant quote</Link>
+        {user && <button type="button" className="drawer-logout" onClick={logout}>Log out</button>}
         </aside>
       </div>,
       document.body,

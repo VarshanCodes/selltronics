@@ -7,13 +7,13 @@ import { db } from "../../config/firebase";
 interface OrderData {
   deviceName: string;
   price: number;
-  status: "Pending Delivery" | "Delivered" | "Cancelled";
+  status?: "Pending Delivery" | "Delivered" | "Cancelled" | string;
   customerName: string;
   deliveryAddress: string;
 }
 
 export default function TrackPurchasePage() {
-  const [orderId, setOrderId] = useState("");
+  const [orderId, setOrderId] = useState(() => typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('order') || '');
   const [loading, setLoading] = useState(false);
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [error, setError] = useState("");
@@ -94,6 +94,12 @@ export default function TrackPurchasePage() {
                 <h2 className="text-2xl font-black text-green-700">Delivery Successful!</h2>
                 <p className="text-green-600 text-sm mt-1 font-semibold">Thank you for purchasing from SellTronics.</p>
               </div>
+            ) : orderData.status === "Cancelled" ? (
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl text-red-600">×</div>
+                <h2 className="text-2xl font-black text-red-700">Order cancelled</h2>
+                <p className="text-red-600 text-sm mt-1 font-semibold">This order is no longer scheduled for delivery.</p>
+              </div>
             ) : (
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-[#F3ECFF] border-2 border-[#7C3AED] rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
@@ -109,7 +115,7 @@ export default function TrackPurchasePage() {
             <div className="space-y-4 bg-white/60 p-5 rounded-2xl">
               <div>
                 <p className="text-[0.7rem] font-bold text-[#6E6683] uppercase tracking-wider">Device</p>
-                <p className="text-lg font-bold text-[#1E1B29]">{orderData.deviceName}</p>
+                <p className="text-lg font-bold text-[#1E1B29]">{orderData.deviceName || 'Pre-Owned device'}</p>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
