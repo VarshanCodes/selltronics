@@ -1,0 +1,24 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Public storefront: only inventory explicitly published by the team is readable.
+    match /products/{productId} {
+      allow read: if resource.data.status == 'Available';
+    }
+
+    // Customers can submit requests. Do not grant public reads, updates, or deletes.
+    match /sellRequests/{requestId} {
+      allow create: if request.resource.data.name is string
+                    && request.resource.data.phone is string;
+    }
+
+    match /buyOrders/{orderId} {
+      allow create: if request.resource.data.customerName is string
+                    && request.resource.data.phone is string;
+    }
+
+    // All other collections remain private. Admin operations should be performed
+    // by authenticated staff with custom claims, or by a secure server endpoint.
+  }
+}

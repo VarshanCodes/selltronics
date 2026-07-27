@@ -1,0 +1,23 @@
+"use client";
+
+import Link from "next/link";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { db } from "@/firebase";
+
+type Product = { id: string; brand?: string; category?: string; deviceName?: string; storage?: string; specs?: string; price?: number; deviceImageCode?: string | null };
+
+export default function HomeFeaturedProducts() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [unavailable, setUnavailable] = useState(false);
+  useEffect(() => {
+    const availableProducts = query(collection(db, "products"), where("status", "==", "Available"));
+    return onSnapshot(
+      availableProducts,
+      (snapshot) => setProducts(snapshot.docs.slice(0, 4).map((item) => ({ id: item.id, ...item.data() } as Product))),
+      () => setUnavailable(true),
+    );
+  }, []);
+  if (unavailable || !products.length) return null;
+  return <section className="home-section soft-section"><div className="section-inner"><div className="section-head"><span>Fresh inventory</span><h2>Just added to the shop.</h2><p>Every listing is published by our team and updates here automatically.</p></div><div className="shop-grid home-product-grid">{products.map((product) => <Link href={`/shop/${product.id}`} className="product-card" key={product.id}><div className="product-image">{product.deviceImageCode ? <img src={product.deviceImageCode} alt={product.deviceName || "Refurbished device"} /> : <span>⌁</span>}<b>Ready to ship</b></div><div className="product-info"><small>{product.brand} · {product.category}</small><h2>{product.deviceName}</h2><p>{product.storage || product.specs || "Expert checked refurbished device"}</p><div><strong>₹{Number(product.price || 0).toLocaleString("en-IN")}</strong><span>View device →</span></div></div></Link>)}</div><div className="home-featured-action"><Link href="/shop" className="btn-ghost">View all refurbished devices</Link></div></div></section>;
+}
