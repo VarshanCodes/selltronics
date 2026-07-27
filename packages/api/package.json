@@ -1,0 +1,16 @@
+{
+  "name": "@repo/api",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@repo/types": "file:../types",
+    "firebase": "^10.8.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@repo/typescript-config": "file:../typescript-config"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "my-platform",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "npm run dev --workspace=web",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
+  },
+  "devDependencies": {
+    "prettier": "^3.7.4",
+    "turbo": "^2.10.5",
+    "typescript": "5.9.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "11.18.0"
+    }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "allowScripts": {
+    "sharp@0.34.5": true,
+    "protobufjs@7.6.5": true,
+    "unrs-resolver@1.12.2": true
+  },
+  "dependencies": {
+    "@react-native-firebase/app": "^25.1.0",
+    "firebase": "^12.16.0"
+  }
+}
