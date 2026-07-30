@@ -234,7 +234,7 @@ export default function ProfilePage() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: '#6E6683', gap: '12px' }}>
                     <div>Expected Price: <strong style={{ color: '#1E1B29' }}>₹{Number(req.expectedPrice || 0).toLocaleString('en-IN')}</strong></div>
                     <div>
-                      Scheduled Days: <strong style={{ color: 'var(--violet-700)' }}>{req.days ? `${req.days}` : 'Pending Admin Update'}</strong>
+                      Scheduled Days: <strong style={{ color: 'var(--violet-700)' }}>{req.days ? `${req.days}` : 'Listing in Progress'}</strong>
                     </div>
                   </div>
                   <button type="button" onClick={() => cancelRequest('sellRequests', req.id)} className="btn-ghost" style={{ marginTop: '14px', padding: '7px 12px', borderColor: '#FEE2E2', color: '#991B1B' }}>Cancel sell request</button>
@@ -278,7 +278,7 @@ export default function ProfilePage() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: '#6E6683', gap: '12px' }}>
                     <div>Price: <strong style={{ color: '#1E1B29' }}>₹{Number(order.price || 0).toLocaleString('en-IN')}</strong></div>
                     <div>
-                      Delivery Status: <strong style={{ color: 'var(--violet-700)' }}>{order.days ? `${order.days}` : 'Pending Admin Update'}</strong>
+                      Delivery Status: <strong style={{ color: 'var(--violet-700)' }}>{order.days ? `${order.days}` : 'Listing in Progress'}</strong>
                     </div>
                   </div>
                   <button type="button" onClick={() => cancelRequest('buyOrders', order.id)} className="btn-ghost" style={{ marginTop: '14px', padding: '7px 12px', borderColor: '#FEE2E2', color: '#991B1B' }}>Cancel COD order</button>

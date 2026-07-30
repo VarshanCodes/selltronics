@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc, addDoc, collection, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, getDoc, addDoc, collection, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, type User } from "firebase/auth";
 import Link from "next/link";
 import { db } from "../../../config/firebase";
@@ -16,6 +16,7 @@ interface ProductDetails {
   storage: string;
   specs: string;
   price: number;
+  originalPrice?: number;
   deviceImageCode: string | null;
   deviceImages?: string[];
   status: string;
@@ -60,10 +61,13 @@ export default function ProductPage() {
       if (!params.id) return;
       
       try {
-        const response = await fetch(`/api/products/${params.id}`, { cache: 'no-store' });
-        if (!response.ok) { router.push('/shop'); return; }
-        const { product } = await response.json();
-        setProduct(product as ProductDetails);
+        const docRef = doc(db, "products", params.id as string);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setProduct({ id: docSnap.id, ...docSnap.data() } as ProductDetails);
+        } else {
+          router.push('/shop');
+        }
       } catch (error) {
         console.error("Error fetching product details:", error);
       } finally {
@@ -100,9 +104,7 @@ export default function ProductPage() {
       });
 
       setOrderId(orderRef.id);
-      const token = await user.getIdToken();
-      const reserve = await fetch(`/api/products/${product.id}/reserve`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-      if (!reserve.ok) throw new Error('Unable to reserve product');
+      await updateDoc(doc(db, 'products', product.id), { status: 'Reserved' });
     } catch (error) {
       console.error("Error creating order:", error);
       alert("Unable to place order right now. Please try again.");
@@ -220,26 +222,89 @@ export default function ProductPage() {
             <p className="text-[#6E6683] mb-6">{product.storage} • {product.specs}</p>
 
             <div className="bg-[#FAF7FF] border border-[#E3D9F9] rounded-xl p-5 mb-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-bold text-[#1E1B29] text-[1.1rem]">Ready for COD</h3>
-                  <p className="text-[#6E6683] text-[0.95rem]">Fully tested and available for instant delivery.</p>
+                  <h3 className="font-bold text-[#1E1B29] text-[0.9rem] uppercase tracking-wider text-gray-500">Price</h3>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-3xl font-black text-green-600">₹{product.price.toLocaleString()}</span>
+                    {product.originalPrice ? (
+                      <span className="text-sm text-red-500 line-through">₹{product.originalPrice.toLocaleString()}</span>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="text-2xl font-black text-[#7C3AED]">₹{product.price.toLocaleString()}</div>
+                {!ordering && (
+                  <button 
+                    type="button" 
+                    onClick={() => setOrdering(true)} 
+                    className="rounded-xl bg-[#5B21B6] px-8 py-3.5 font-bold text-white transition-colors hover:bg-[#3D1E7A] cursor-pointer shadow-md"
+                  >
+                    Buy Device
+                  </button>
+                )}
               </div>
             </div>
 
-            {!ordering ? <button type="button" onClick={() => setOrdering(true)} className="w-full rounded-xl bg-[#5B21B6] py-4 font-bold text-white transition-colors hover:bg-[#3D1E7A]">Buy now</button> : !user ? <div className="rounded-2xl border border-[#E3D9F9] bg-[#FAF7FF] p-5 text-center"><h2 className="text-lg font-bold text-[#1E1B29]">Sign in to continue</h2><p className="mt-2 text-sm text-[#6E6683]">Use your Google account to continue securely to delivery details.</p><button type="button" onClick={signInWithGoogle} className="mt-4 w-full rounded-xl border border-[#E3D9F9] bg-white py-3 font-bold text-[#1E1B29] hover:bg-[#F3ECFF]"><span aria-hidden="true">G</span> Continue with Google</button><button type="button" onClick={() => setOrdering(false)} className="mt-3 text-sm font-semibold text-[#5B21B6]">Back to device details</button></div> : <form onSubmit={handleSubmitOrder} className="space-y-4">
-              <p className="text-sm font-semibold text-[#5B21B6]">Signed in as {user.displayName || user.email}</p>
-              <input required value={formData.customerName} onChange={(e) => setFormData({...formData, customerName: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3" placeholder="Full name" />
-              <input required value={formData.customerPhone} onChange={(e) => setFormData({...formData, customerPhone: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3" placeholder="Phone number" />
-              <input required value={formData.whatsappNumber} onChange={(e) => setFormData({...formData, whatsappNumber: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3" placeholder="WhatsApp number" />
-              <input required type="email" value={formData.customerEmail} onChange={(e) => setFormData({...formData, customerEmail: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3" placeholder="Email address" />
-              <textarea required value={formData.deliveryAddress} onChange={(e) => setFormData({...formData, deliveryAddress: e.target.value})} className="min-h-24 w-full rounded-xl border border-[#E3D9F9] px-4 py-3" placeholder="Delivery address" />
-              <button type="submit" disabled={submitting} className="w-full rounded-xl bg-[#5B21B6] py-4 font-bold text-white transition-colors hover:bg-[#3D1E7A] disabled:opacity-70">
-                {submitting ? "Placing order..." : "Place COD order"}
-              </button>
-            </form>}
+            {ordering && (
+              <div className="mt-4 border-t border-[#EFE9FB] pt-6">
+                {!user ? (
+                  <div className="rounded-2xl border border-[#E3D9F9] bg-[#FAF7FF] p-6 text-center">
+                    <h2 className="text-lg font-bold text-[#1E1B29]">Google Sign-in Required</h2>
+                    <p className="mt-2 text-sm text-[#6E6683] mb-4">Please sign in to proceed with your address and contact details.</p>
+                    <button 
+                      type="button" 
+                      onClick={signInWithGoogle} 
+                      className="w-full rounded-xl border border-[#E3D9F9] bg-white py-3.5 font-bold text-[#1E1B29] hover:bg-[#F3ECFF] flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12.2 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.5 1.8 15 1 12.2 1 7.4 1 3.4 3.8 1.6 7.8l3.7 2.9C6.2 7.4 9 5 12.2 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3h-11v4.4h6.3c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.6-5 3.6-8.7z"/><path fill="#FBBC05" d="M5.3 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.6 7.3C.6 9.2 0 11.3 0 13.5s.6 4.3 1.6 6.2l3.7-2.9z"/><path fill="#34A853" d="M12.2 19c-3.2 0-6-2.4-6.9-5.7L1.6 16.2C3.4 20.2 7.4 23 12.2 23c3 0 5.8-1 7.9-2.9l-3.7-2.9c-1.1.8-2.5 1.8-4.2 1.8z"/></svg>
+                      Continue with Google
+                    </button>
+                    <button type="button" onClick={() => setOrdering(false)} className="mt-4 text-sm font-semibold text-[#5B21B6] hover:underline cursor-pointer">Cancel</button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmitOrder} className="space-y-4 bg-white border border-[#EFE9FB] p-6 rounded-2xl shadow-sm">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-bold text-[#1E1B29]">Delivery Details</h3>
+                      <span className="text-xs text-[#6E6683]">Signed in as {user.email}</span>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">Full Name</label>
+                      <input required value={formData.customerName} onChange={(e) => setFormData({...formData, customerName: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED]" placeholder="Your name" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">Phone Number</label>
+                        <input required value={formData.customerPhone} onChange={(e) => setFormData({...formData, customerPhone: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED]" placeholder="Phone number" />
+                      </div>
+                      <div>
+                        <label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">WhatsApp Number</label>
+                        <input required value={formData.whatsappNumber} onChange={(e) => setFormData({...formData, whatsappNumber: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED]" placeholder="For shipping updates" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">Email Address</label>
+                      <input required type="email" value={formData.customerEmail} onChange={(e) => setFormData({...formData, customerEmail: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED]" placeholder="Email" />
+                    </div>
+
+                    <div>
+                      <label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">Delivery Address</label>
+                      <textarea required value={formData.deliveryAddress} onChange={(e) => setFormData({...formData, deliveryAddress: e.target.value})} className="min-h-24 w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED] resize-none" placeholder="House/flat, building name, street address, pincode" />
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <button type="button" onClick={() => setOrdering(false)} className="flex-1 rounded-xl border border-[#E3D9F9] py-3.5 font-bold text-[#1E1B29] transition-colors hover:bg-gray-50 cursor-pointer">
+                        Cancel
+                      </button>
+                      <button type="submit" disabled={submitting} className="flex-1 rounded-xl bg-[#5B21B6] py-3.5 font-bold text-white transition-colors hover:bg-[#3D1E7A] disabled:opacity-70 cursor-pointer">
+                        {submitting ? "Processing..." : "Proceed"}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
             <p className="mt-4 text-center text-[0.8rem] text-[#A79CBE]">
               Includes 6-month warranty and free shipping.
             </p>

@@ -3,11 +3,11 @@ import Link from 'next/link';
 import HomeFeaturedProducts from '@/components/HomeFeaturedProducts';
 
 const categories = [
-  { name: 'Smartphones', sub: 'Apple, Samsung, OnePlus & more', icon: 'phone', category: 'Smartphones' },
-  { name: 'Laptops', sub: 'Dell, HP, Lenovo, ASUS & more', icon: 'laptop', category: 'Laptops' },
-  { name: 'Tablets', sub: 'iPad, Galaxy Tab, Xiaomi & more', icon: 'tablet', category: 'Tablets' },
-  { name: 'Mac devices', sub: 'MacBook, iMac, Mac mini & more', icon: 'laptop', category: 'Mac' },
-  { name: 'Other devices', sub: 'Watches, consoles & accessories', icon: 'watch', category: 'Other devices' },
+  { name: 'Smartphones', sub: 'Apple, Samsung, OnePlus & more', image: 'https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-30_21-18-32-076.png', category: 'Smartphones' },
+  { name: 'Laptops', sub: 'Dell, HP, Lenovo, ASUS & more', image: 'https://ik.imagekit.io/e8vtmc5nh/file_000000003aa481fa8a4ae4415b099d49.png', category: 'Laptops' },
+  { name: 'Tablets', sub: 'iPad, Galaxy Tab, Xiaomi & more', image: 'https://ik.imagekit.io/e8vtmc5nh/file_00000000bfcc820b9ec8f0cc9e0379d8.png', category: 'Tablets' },
+  { name: 'Mac devices', sub: 'MacBook, iMac, Mac mini & more', image: 'https://ik.imagekit.io/e8vtmc5nh/file_0000000026b8820b9d8f884d7d0d3bf5.png', category: 'Mac' },
+  { name: 'Other devices', sub: 'Watches, consoles & accessories', image: 'https://ik.imagekit.io/e8vtmc5nh/file_00000000ae90820ba15f7b2a65f2ca9c.png', category: 'Other devices' },
 ];
 
 const brands = [
@@ -28,7 +28,7 @@ function FeatureIcon({ type }: { type: 'quote' | 'pickup' | 'inspect' | 'pay' | 
   if (type === 'pickup') return <svg viewBox="0 0 24 24" fill="none"><path {...common} d="M3 7h12v10H3zM15 10h3l3 3v4h-6zM7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM18 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg>;
   if (type === 'inspect') return <svg viewBox="0 0 24 24" fill="none"><circle {...common} cx="11" cy="11" r="6"/><path {...common} d="m16 16 4 4M8.5 11l1.7 1.7 3.5-3.5"/></svg>;
   if (type === 'pay') return <svg viewBox="0 0 24 24" fill="none"><rect {...common} x="3" y="6" width="18" height="12" rx="2"/><path {...common} d="M3 10h18M7 14h3"/></svg>;
-  if (type === 'price') return <svg viewBox="0 0 24 24" fill="none"><path {...common} d="M4 4h8l8 8-8 8-8-8zM8 8h.01"/><circle cx="8" cy="8" r="1" fill="currentColor"/></svg>;
+  if (type === 'price') return <svg viewBox="0 0 24 24" fill="none"><path {...common} d="M4 4h8l8 8-8 8-8 8-8-8zM8 8h.01"/><circle cx="8" cy="8" r="1" fill="currentColor"/></svg>;
   return <svg viewBox="0 0 24 24" fill="none"><path {...common} d="M6 5h12v14H6zM9 9h6M9 13h6M9 17h4"/><path {...common} d="m16 3 2 2 3-3"/></svg>;
 }
 
@@ -48,12 +48,12 @@ export default function HomePage() {
   return <div className="home-page">
     <div className="top-strip">Get the best value for your old tech - <b>free pickup available.</b></div>
     <section className="home-hero"><div className="home-hero-inner">
-      <div className="home-hero-copy reveal-up"><span className="eyebrow">Trusted re-commerce, made simple</span><h1>Make your old tech <em>worth more.</em></h1><p>Sell devices for a fair quote or shop expertly checked Pre-Owned tech. One place, no fuss.</p><div className="hero-actions"><Link href="/sell" className="btn-primary">Sell a device <span>-&gt;</span></Link><Link href="/shop" className="btn-ghost">Shop Pre-Owned</Link></div><div className="hero-trust"><div><b>10k+</b><span>devices given a<br />second life</span></div><div><b>4.8/5</b><span>customer rating</span></div><div><b>Zero</b><span>cost to get a quote</span></div></div></div>
+      <div className="home-hero-copy reveal-up"><span className="eyebrow">Trusted re-commerce, made simple</span><h1>Make your old tech <em>worth more.</em></h1><p>Sell devices for a fair quote or shop expertly checked Pre-Owned tech. One place, no fuss.</p><div className="hero-actions"><Link href="/sell" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Sell a device <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></Link><Link href="/shop" className="btn-ghost">Shop Pre-Owned</Link></div><div className="hero-trust"><div><b>10k+</b><span>devices given a<br />second life</span></div><div><b>4.8/5</b><span>customer rating</span></div><div><b>Zero</b><span>cost to get a quote</span></div></div></div>
       <div className="hero-visual" aria-hidden="true"><div className="hero-orb"/><div className="quote-preview first"><span>Estimated value</span><b>iPhone 15 Pro</b><strong>Rs. 52,000 <small>up to</small></strong><i><u/></i><p>Excellent condition</p></div><div className="quote-preview second"><span>Estimated value</span><b>MacBook Air M1</b><strong>Rs. 58,000 <small>up to</small></strong><i><u/></i><p>Good condition</p></div><div className="hero-device"><DeviceIcon type="phone"/></div></div>
     </div></section>
     <div className="price-ticker"><div>Today&apos;s top quotes <b>iPhone 15 Pro Rs. 52,000</b> | MacBook Air M1 <b>Rs. 58,000</b> | iPad Air <b>Rs. 31,000</b> | Galaxy S24 <b>Rs. 39,000</b> | OnePlus 11 <b>Rs. 22,000</b></div></div>
 
-    <section id="devices" className="home-section"><div className="section-inner"><div className="section-head"><span>What are you selling?</span><h2>Your device still has value.</h2><p>Choose a category, tell us a little about the device, and get started in minutes.</p></div><div className="device-grid-home">{categories.map((item) => <Link href={`/sell?category=${encodeURIComponent(item.category)}`} className="device-category" key={item.name}><div><h3>{item.name}</h3><p>{item.sub}</p></div><span className="device-arrow">-&gt;</span><div className="device-drawing"><DeviceIcon type={item.icon}/></div></Link>)}</div></div></section>
+    <section id="devices" className="home-section"><div className="section-inner"><div className="section-head"><span>What are you selling?</span><h2>Your device still has value.</h2><p>Choose a category, tell us a little about the device, and get started in minutes.</p></div><div className="device-grid-home">{categories.map((item) => <Link href={`/sell?category=${encodeURIComponent(item.category)}`} className="device-category" key={item.name}><div><h3>{item.name}</h3><p>{item.sub}</p></div><span className="device-arrow" style={{ display: 'grid', placeItems: 'center' }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></span><div className="device-drawing" style={{ position: 'absolute', right: 21, bottom: 15, width: 86, height: 86, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /></div></Link>)}</div></div></section>
 
     <HomeFeaturedProducts />
 

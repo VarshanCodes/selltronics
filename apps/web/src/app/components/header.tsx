@@ -80,8 +80,8 @@ export default function Header() {
           <div>
             <b className="block text-[1.05rem] text-[#1E1B29] font-space font-bold">Guest</b>
             <div className="text-[0.84rem] text-[#6E6683] mt-0.5">Not logged in</div>
-            <button className="flex items-center gap-1.5 mt-2 text-[0.84rem] font-semibold text-[#7C3AED] hover:underline cursor-pointer bg-transparent border-none p-0 font-inter">
-              Log In →
+            <button className="flex items-center gap-1.5 mt-2 text-[0.84rem] font-semibold text-[#7C3AED] hover:underline cursor-pointer bg-transparent border-none p-0 font-inter" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              Log In <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </button>
           </div>
         </div>

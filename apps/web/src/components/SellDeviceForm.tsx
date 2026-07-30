@@ -293,9 +293,19 @@ function normalizeCategory(value: string | null): DeviceType {
   return categoryAliases[value] || 'Smartphones';
 }
 
+const sellCategories = [
+  { name: 'Smartphones', sub: 'Apple, Samsung, OnePlus & more', image: 'https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-30_21-18-32-076.png', category: 'Smartphones' },
+  { name: 'Laptops', sub: 'Dell, HP, Lenovo, ASUS & more', image: 'https://ik.imagekit.io/e8vtmc5nh/file_000000003aa481fa8a4ae4415b099d49.png', category: 'Laptops' },
+  { name: 'Tablets', sub: 'iPad, Galaxy Tab, Xiaomi & more', image: 'https://ik.imagekit.io/e8vtmc5nh/file_00000000bfcc820b9ec8f0cc9e0379d8.png', category: 'Tablets' },
+  { name: 'Mac devices', sub: 'MacBook, iMac, Mac mini & more', image: 'https://ik.imagekit.io/e8vtmc5nh/file_0000000026b8820b9d8f884d7d0d3bf5.png', category: 'Mac' },
+  { name: 'Other devices', sub: 'Watches, consoles & accessories', image: 'https://ik.imagekit.io/e8vtmc5nh/file_00000000ae90820ba15f7b2a65f2ca9c.png', category: 'Other devices' },
+];
+
 export default function SellDeviceForm() {
   const searchParams = useSearchParams();
-  const initialCategory = normalizeCategory(searchParams.get('category'));
+  const categoryParam = searchParams.get('category');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam);
+  const initialCategory = normalizeCategory(categoryParam);
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -329,6 +339,13 @@ export default function SellDeviceForm() {
   const currentCopy = categoryCopy[form.deviceType];
   const currentQuestions = questionsByCategory[form.deviceType];
   const currentProblems = problemsByCategory[form.deviceType];
+
+  useEffect(() => {
+    setSelectedCategory(searchParams.get('category'));
+    if (searchParams.get('category')) {
+      update('deviceType', normalizeCategory(searchParams.get('category')));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -404,6 +421,57 @@ export default function SellDeviceForm() {
   };
 
   if (successId) return <section className="sell-success"><span>OK</span><h2>Pickup request received.</h2><p>A Selltronics representative will inspect your device in person, confirm the final quote, and pay you by cash or your preferred UPI payment ID.</p><code>{successId}</code><div><a className="btn-primary" href={`/track?order=${successId}`}>Track request</a><button className="btn-ghost" onClick={() => { setSuccessId(null); setStep(1); }}>Sell another device</button></div></section>;
+
+  if (!selectedCategory) {
+    return (
+      <div className="sell-form-card" style={{ maxWidth: 1000, margin: '20px auto' }}>
+        <div className="sell-form-heading" style={{ textAlign: 'center', marginBottom: 32 }}>
+          <span className="eyebrow">Selltronics</span>
+          <h2>Select your device category to begin</h2>
+          <p>Choose the type of device you want to sell for a secure, doorstep valuation.</p>
+        </div>
+        <div className="device-grid-home" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+          {sellCategories.map((item) => (
+            <button
+              key={item.name}
+              type="button"
+              onClick={() => {
+                setSelectedCategory(item.category);
+                update('deviceType', item.category);
+                const params = new URLSearchParams(window.location.search);
+                params.set('category', item.category);
+                window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
+              }}
+              className="device-category"
+              style={{
+                textAlign: 'left',
+                border: '1px solid #efe9fb',
+                borderRadius: '20px',
+                background: '#fff',
+                padding: '22px',
+                minHeight: '200px',
+                width: '100%',
+                cursor: 'pointer',
+                display: 'block',
+                position: 'relative'
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--ink)' }}>{item.name}</h3>
+                <p style={{ margin: '5px 0 0 0', color: 'var(--gray)', fontSize: '0.76rem', lineHeight: '1.4', maxWidth: '170px' }}>{item.sub}</p>
+              </div>
+              <span className="device-arrow" style={{ right: 18, top: 18, display: 'grid', placeItems: 'center' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </span>
+              <div className="device-drawing" style={{ position: 'absolute', right: 21, bottom: 15, width: 86, height: 86, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return <form onSubmit={submit} className="sell-form-card">
     <div className="sell-form-heading">
@@ -561,7 +629,7 @@ export default function SellDeviceForm() {
     {error && <p className="track-error">{error}</p>}
     <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
       {step > 1 && <button className="btn-ghost" type="button" onClick={goBack}>Back</button>}
-      {step < 7 ? (canContinue && <button className="btn-primary" type="button" onClick={goNext}>Continue →</button>) : (currentUser && <button className="btn-primary sell-submit" disabled={loading}>{loading ? 'Saving your request...' : 'Request pickup →'}</button>)}
+      {step < 7 ? (canContinue && <button className="btn-primary" type="button" onClick={goNext} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Continue <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>) : (currentUser && <button className="btn-primary sell-submit" disabled={loading} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>{loading ? 'Saving your request...' : <>Request pickup <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></>}</button>)}
     </div>
   </form>;
 }

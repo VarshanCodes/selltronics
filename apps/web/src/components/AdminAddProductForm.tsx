@@ -12,6 +12,7 @@ interface Product {
   storage: string;
   specs: string;
   price: number;
+  originalPrice?: number;
   deviceImageCode?: string | null;
   deviceImages?: string[];
   status: string;
@@ -26,6 +27,7 @@ export default function AdminAddProductForm() {
   const [storage, setStorage] = useState("");
   const [specs, setSpecs] = useState("");
   const [price, setPrice] = useState("");
+  const [originalPrice, setOriginalPrice] = useState("");
   const [images, setImages] = useState<string[]>([]);
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -92,6 +94,7 @@ export default function AdminAddProductForm() {
     setStorage(p.storage);
     setSpecs(p.specs);
     setPrice(String(p.price));
+    setOriginalPrice(p.originalPrice ? String(p.originalPrice) : "");
     setImages(p.deviceImages || (p.deviceImageCode ? [p.deviceImageCode] : []));
     setSuccessMessage("");
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -116,6 +119,7 @@ export default function AdminAddProductForm() {
     setStorage("");
     setSpecs("");
     setPrice("");
+    setOriginalPrice("");
     setImages([]);
   };
 
@@ -135,6 +139,7 @@ export default function AdminAddProductForm() {
       storage,
       specs,
       price: Number(price),
+      originalPrice: originalPrice ? Number(originalPrice) : 0,
       deviceImageCode: images[0] || null, // First image for backwards compatibility
       deviceImages: images, // Store all images
       status: "Available",
@@ -160,6 +165,7 @@ export default function AdminAddProductForm() {
       setStorage("");
       setSpecs("");
       setPrice("");
+      setOriginalPrice("");
       setImages([]);
       fetchProducts();
     } catch (error) {
@@ -255,7 +261,7 @@ export default function AdminAddProductForm() {
           </div>
 
           {/* Price & Image Upload */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
             <div>
               <label className="block text-[0.85rem] font-bold text-[#1E1B29] mb-2">Quoted Offer Price (₹ or $)</label>
               <input 
@@ -263,6 +269,17 @@ export default function AdminAddProductForm() {
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder="e.g. 45000" 
+                className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#E3D9F9] focus:border-[#7C3AED] outline-none text-[#1E1B29] text-xl font-bold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[0.85rem] font-bold text-[#1E1B29] mb-2">Original Price (₹ or $)</label>
+              <input 
+                type="number" 
+                value={originalPrice}
+                onChange={(e) => setOriginalPrice(e.target.value)}
+                placeholder="e.g. 60000" 
                 className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#E3D9F9] focus:border-[#7C3AED] outline-none text-[#1E1B29] text-xl font-bold"
               />
             </div>
@@ -349,7 +366,12 @@ export default function AdminAddProductForm() {
                   <div>
                     <h4 className="font-bold text-[#1E1B29] text-sm">{p.brand} {p.deviceName}</h4>
                     <p className="text-xs text-gray-500">{p.category} · {p.storage || "No Storage"}</p>
-                    <p className="text-sm font-black text-[#7C3AED] mt-1">₹{p.price.toLocaleString()}</p>
+                    <div className="flex flex-col mt-1">
+                      <span className="text-lg font-black text-green-600">₹{p.price.toLocaleString()}</span>
+                      {p.originalPrice ? (
+                        <span className="text-xs text-red-500 line-through">₹{p.originalPrice.toLocaleString()}</span>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
