@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc, addDoc, collection, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, addDoc, collection, serverTimestamp, setDoc } from "firebase/firestore";
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, type User } from "firebase/auth";
 import Link from "next/link";
 import { db } from "../../../config/firebase";
@@ -60,14 +60,10 @@ export default function ProductPage() {
       if (!params.id) return;
       
       try {
-        const docRef = doc(db, "products", params.id as string);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists() && docSnap.data().status === "Available") {
-          setProduct({ id: docSnap.id, ...docSnap.data() } as ProductDetails);
-        } else {
-          router.push("/shop");
-        }
+        const response = await fetch(`/api/products/${params.id}`, { cache: 'no-store' });
+        if (!response.ok) { router.push('/shop'); return; }
+        const { product } = await response.json();
+        setProduct(product as ProductDetails);
       } catch (error) {
         console.error("Error fetching product details:", error);
       } finally {
@@ -104,7 +100,9 @@ export default function ProductPage() {
       });
 
       setOrderId(orderRef.id);
-      await updateDoc(doc(db, "products", product.id), { status: "Reserved" });
+      const token = await user.getIdToken();
+      const reserve = await fetch(`/api/products/${product.id}/reserve`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      if (!reserve.ok) throw new Error('Unable to reserve product');
     } catch (error) {
       console.error("Error creating order:", error);
       alert("Unable to place order right now. Please try again.");
