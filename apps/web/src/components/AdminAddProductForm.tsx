@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { db } from "@/firebase";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
 
 interface Product {
   id: string;
@@ -13,6 +15,8 @@ interface Product {
   deviceImageCode?: string | null;
   deviceImages?: string[];
   status: string;
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 export default function AdminAddProductForm() {
@@ -33,15 +37,22 @@ export default function AdminAddProductForm() {
   // Fetch all products
   const fetchProducts = async () => {
     try {
-      const response = await fetch('/api/admin/products', { cache: 'no-store' });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || 'Could not load products');
-      }
-      const { products: list } = await response.json();
-      setProducts(list as Product[]);
+      const querySnapshot = await getDocs(collection(db, 'products'));
+      const list = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Product));
+      
+      // Sort by createdAt descending client-side
+      list.sort((a, b) => {
+        const tA = a.createdAt?.seconds || 0;
+        const tB = b.createdAt?.seconds || 0;
+        return tB - tA;
+      });
+
+      setProducts(list);
     } catch (err) {
-      console.error("Error fetching products:", err);
+      console.error("Error fetching products from Firestore:", err);
     }
   };
 
@@ -89,11 +100,7 @@ export default function AdminAddProductForm() {
   const handleDelete = async (productId: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
-      const response = await fetch(`/api/admin/products?id=${encodeURIComponent(productId)}`, { method: 'DELETE' });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || 'Could not delete product');
-      }
+      await deleteDoc(doc(db, 'products', productId));
       setProducts(prev => prev.filter(p => p.id !== productId));
       setSuccessMessage("Product deleted successfully.");
     } catch (err) {
@@ -131,23 +138,19 @@ export default function AdminAddProductForm() {
       deviceImageCode: images[0] || null, // First image for backwards compatibility
       deviceImages: images, // Store all images
       status: "Available",
+      updatedAt: serverTimestamp(),
     };
 
     try {
       if (editingId) {
-        const response = await fetch('/api/admin/products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingId, ...productPayload }) });
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.error || 'Could not update product');
-        }
+        await updateDoc(doc(db, 'products', editingId), productPayload);
         setSuccessMessage(`${deviceName} has been updated successfully!`);
         setEditingId(null);
       } else {
-        const response = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(productPayload) });
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.error || 'Could not publish product');
-        }
+        await addDoc(collection(db, 'products'), {
+          ...productPayload,
+          createdAt: serverTimestamp(),
+        });
         setSuccessMessage(`${deviceName} has been published successfully!`);
       }
       
