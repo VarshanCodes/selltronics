@@ -17,11 +17,17 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await authorized(request))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const product = await request.json();
-  if (!product.deviceName || !Number.isFinite(Number(product.price)) || !Array.isArray(product.deviceImages) || !product.deviceImages.length) return NextResponse.json({ error: 'Invalid product details.' }, { status: 400 });
-  const reference = await getAdminDb().collection('products').add({ ...product, price: Number(product.price), status: 'Available', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
-  return NextResponse.json({ id: reference.id }, { status: 201 });
+  try {
+    if (!(await authorized(request))) return NextResponse.json({ error: 'Unauthorized. Please unlock the admin dashboard again.' }, { status: 401 });
+    const product = await request.json();
+    if (!product.deviceName || !Number.isFinite(Number(product.price)) || !Array.isArray(product.deviceImages) || !product.deviceImages.length) return NextResponse.json({ error: 'Invalid product details.' }, { status: 400 });
+    const reference = await getAdminDb().collection('products').add({ ...product, price: Number(product.price), status: 'Available', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+    return NextResponse.json({ id: reference.id }, { status: 201 });
+  } catch (error) {
+    console.error('Could not publish product', error);
+    const message = error instanceof Error && error.message.includes('FIREBASE_SERVICE_ACCOUNT_JSON') ? 'Server Firebase credentials are missing. Add FIREBASE_SERVICE_ACCOUNT_JSON in Vercel, then redeploy.' : 'The server could not publish this product. Check the Vercel Function logs for the exact Firebase error.';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function PUT(request: NextRequest) {

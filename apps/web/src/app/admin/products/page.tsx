@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import AdminNav from '@/app/components/AdminNav';
 import { db } from '@/firebase';
-import { addDoc, collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, getDocs, doc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { imageFileToDataUrl } from '@/utils/imageData';
 import AdminGate from '@/components/AdminGate';
 
-type Product = { id: string; name?: string; type?: string; brand?: string; storage?: string; price?: string | number; condition?: string; specs?: string; image?: string; deviceImageCode?: string; };
+type Product = { id: string; name?: string; type?: string; brand?: string; storage?: string; price?: string | number; condition?: string; specs?: string; image?: string; deviceImageCode?: string; createdAt?: any; updatedAt?: any; };
 type ProductForm = { name: string; type: string; brand: string; storage: string; price: string; condition: string; specs: string; image: string; };
 
 export default function AdminProducts() {
@@ -33,6 +33,12 @@ export default function AdminProducts() {
           id: doc.id,
           ...doc.data(),
         } as Product));
+        // Sort products by createdAt descending client-side
+        productsData.sort((a, b) => {
+          const tA = a.createdAt?.seconds || 0;
+          const tB = b.createdAt?.seconds || 0;
+          return tB - tA;
+        });
         setProducts(productsData);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -72,17 +78,38 @@ export default function AdminProducts() {
   const handleSave = async () => {
     if (editingProduct) {
       try {
-        const productData = { ...formData, price: Number(formData.price), deviceName: formData.name, category: formData.type, deviceImageCode: formData.image, status: 'Available' };
+        const productData = { 
+          ...formData, 
+          price: Number(formData.price), 
+          deviceName: formData.name, 
+          category: formData.type, 
+          deviceImageCode: formData.image, 
+          status: 'Available',
+          updatedAt: serverTimestamp() 
+        };
         await updateDoc(doc(db, 'products', editingProduct.id), productData);
-        setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...formData } : p));
+        // Optimistically update products list
+        setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...formData, updatedAt: { seconds: Math.floor(Date.now() / 1000) } } : p));
       } catch (error) {
         console.error('Error updating product:', error);
       }
     } else {
       try {
-        const productData = { ...formData, price: Number(formData.price), deviceName: formData.name, category: formData.type, deviceImageCode: formData.image, status: 'Available' };
+        const productData = { 
+          ...formData, 
+          price: Number(formData.price), 
+          deviceName: formData.name, 
+          category: formData.type, 
+          deviceImageCode: formData.image, 
+          status: 'Available',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
         const created = await addDoc(collection(db, 'products'), productData);
-        setProducts((current) => [...current, { id: created.id, ...formData, price: Number(formData.price) }]);
+        setProducts((current) => [
+          { id: created.id, ...formData, price: Number(formData.price), createdAt: { seconds: Math.floor(Date.now() / 1000) } },
+          ...current
+        ]);
       } catch (error) { console.error('Error adding product:', error); }
     }
     setShowModal(false);

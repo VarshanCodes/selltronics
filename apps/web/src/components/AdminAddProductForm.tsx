@@ -34,7 +34,10 @@ export default function AdminAddProductForm() {
   const fetchProducts = async () => {
     try {
       const response = await fetch('/api/admin/products', { cache: 'no-store' });
-      if (!response.ok) throw new Error('Could not load products');
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not load products');
+      }
       const { products: list } = await response.json();
       setProducts(list as Product[]);
     } catch (err) {
@@ -87,7 +90,10 @@ export default function AdminAddProductForm() {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
       const response = await fetch(`/api/admin/products?id=${encodeURIComponent(productId)}`, { method: 'DELETE' });
-      if (!response.ok) throw new Error('Could not delete product');
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not delete product');
+      }
       setProducts(prev => prev.filter(p => p.id !== productId));
       setSuccessMessage("Product deleted successfully.");
     } catch (err) {
@@ -130,12 +136,18 @@ export default function AdminAddProductForm() {
     try {
       if (editingId) {
         const response = await fetch('/api/admin/products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingId, ...productPayload }) });
-        if (!response.ok) throw new Error('Could not update product');
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || 'Could not update product');
+        }
         setSuccessMessage(`${deviceName} has been updated successfully!`);
         setEditingId(null);
       } else {
         const response = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(productPayload) });
-        if (!response.ok) throw new Error('Could not publish product');
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || 'Could not publish product');
+        }
         setSuccessMessage(`${deviceName} has been published successfully!`);
       }
       
@@ -149,7 +161,7 @@ export default function AdminAddProductForm() {
       fetchProducts();
     } catch (error) {
       console.error("Error saving product: ", error);
-      alert("Failed to save product.");
+      alert(error instanceof Error ? `Failed to save product: ${error.message}` : "Failed to save product.");
     } finally {
       setIsSubmitting(false);
     }
