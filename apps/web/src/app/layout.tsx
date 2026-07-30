@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import Navbar from "./components/Navbar";
 import Footer from "../components/Footer";
+import BottomMobileNav from "./components/BottomMobileNav";
 
 export const metadata: Metadata = {
   title: "SellTronics | Buy & Sell Used Electronics",
@@ -15,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-space bg-[#F3ECFF] min-h-screen text-[#1E1B29] flex flex-col">
+      <body className="font-space bg-[#F3ECFF] min-h-screen text-[#1E1B29] flex flex-col pb-16 sm:pb-0">
         <Navbar />
         
         {/* Main content takes up the remaining space */}
@@ -24,6 +25,7 @@ export default function RootLayout({
         </main>
         
         <Footer />
+        <BottomMobileNav />
       </body>
     </html>
   );

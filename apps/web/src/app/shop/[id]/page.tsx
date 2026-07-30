@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc, addDoc, collection, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, getDoc, addDoc, collection, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, type User } from "firebase/auth";
 import Link from "next/link";
 import { db } from "../../../config/firebase";
@@ -41,7 +41,13 @@ export default function ProductPage() {
 
   useEffect(() => onAuthStateChanged(auth, (signedInUser) => {
     setUser(signedInUser);
-    if (signedInUser) setFormData((current) => ({ ...current, customerName: current.customerName || signedInUser.displayName || '', customerEmail: current.customerEmail || signedInUser.email || '' }));
+    if (!signedInUser) return;
+    setFormData((current) => ({ ...current, customerName: current.customerName || signedInUser.displayName || '', customerEmail: current.customerEmail || signedInUser.email || '' }));
+    getDoc(doc(db, 'users', signedInUser.uid)).then((snapshot) => {
+      if (!snapshot.exists()) return;
+      const details = snapshot.data();
+      setFormData((current) => ({ ...current, customerName: current.customerName || details.name || '', customerPhone: current.customerPhone || details.phone || '', whatsappNumber: current.whatsappNumber || details.whatsappNumber || '', customerEmail: current.customerEmail || details.email || signedInUser.email || '', deliveryAddress: current.deliveryAddress || [details.address, details.city, details.state, details.pincode].filter(Boolean).join(', ') }));
+    }).catch((error) => console.error('Could not load saved profile', error));
   }), []);
 
   const signInWithGoogle = async () => {
@@ -78,6 +84,11 @@ export default function ProductPage() {
 
     setSubmitting(true);
     try {
+      if (!user) throw new Error('Sign in is required to place an order.');
+      await setDoc(doc(db, 'users', user.uid), {
+        name: formData.customerName, email: formData.customerEmail, phone: formData.customerPhone,
+        whatsappNumber: formData.whatsappNumber, address: formData.deliveryAddress, updatedAt: serverTimestamp(),
+      }, { merge: true });
       const orderRef = await addDoc(collection(db, "buyOrders"), {
         productId: product.id,
         deviceName: `${product.brand} ${product.deviceName}`,
@@ -87,7 +98,7 @@ export default function ProductPage() {
         whatsappNumber: formData.whatsappNumber,
         customerEmail: formData.customerEmail,
         deliveryAddress: formData.deliveryAddress,
-        userId: user?.uid || null,
+        userId: user.uid,
         status: "Pending Delivery",
         createdAt: serverTimestamp(),
       });

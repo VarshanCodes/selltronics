@@ -20,16 +20,7 @@ export default function AdminNav() {
       <header className="nav">
         <div className="nav-inner">
           <Link href="/admin" className="logo">
-            <div className="mark">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M8 3h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                />
-                <path d="M11 18h2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-            </div>
+            <div className="mark"><img src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-30_18-01-53-939.png" alt="Selltronics" /></div>
             Selltronics
           </Link>
 

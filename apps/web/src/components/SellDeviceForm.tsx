@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
 
 type DeviceType = 'Smartphones' | 'Laptops' | 'Tablets' | 'Mac' | 'Other devices';
-type Step = 1 | 2 | 3 | 4 | 5 | 6;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type Brand = { name: string; logo?: string; mark?: string };
 type CategoryCopy = {
   eyebrow: string;
@@ -49,16 +49,16 @@ const categoryCopy: Record<DeviceType, CategoryCopy> = {
       brand('POCO', undefined, 'PO'),
       brand('Vivo', 'https://cdn.simpleicons.org/vivo'),
       brand('Oppo', 'https://cdn.simpleicons.org/oppo'),
-      brand('Realme', 'https://cdn.simpleicons.org/realme'),
+      brand('Realme', '/brands/realme.svg'),
       brand('Motorola', 'https://cdn.simpleicons.org/motorola'),
-      brand('Nothing', 'https://cdn.simpleicons.org/nothing'),
+      brand('Nothing', '/brands/nothing.svg'),
       brand('Nokia', 'https://cdn.simpleicons.org/nokia'),
       brand('Infinix', undefined, 'IN'),
       brand('Tecno', undefined, 'TE'),
       brand('Honor', 'https://cdn.simpleicons.org/honor'),
       brand('iQOO', undefined, 'IQ'),
       brand('ASUS', 'https://cdn.simpleicons.org/asus'),
-      brand('Sony', 'https://cdn.simpleicons.org/sony'),
+      brand('Sony', '/brands/sony.svg'),
       brand('LG', 'https://cdn.simpleicons.org/lg'),
       brand('Other', undefined, '+'),
     ],
@@ -81,7 +81,7 @@ const categoryCopy: Record<DeviceType, CategoryCopy> = {
       brand('Lenovo', 'https://cdn.simpleicons.org/lenovo'),
       brand('ASUS', 'https://cdn.simpleicons.org/asus'),
       brand('Acer', 'https://cdn.simpleicons.org/acer'),
-      brand('Microsoft', 'https://cdn.simpleicons.org/microsoft'),
+      brand('Microsoft', '/brands/microsoft.svg'),
       brand('MSI', 'https://cdn.simpleicons.org/msi'),
       brand('Alienware', 'https://cdn.simpleicons.org/alienware'),
       brand('Razer', 'https://cdn.simpleicons.org/razer'),
@@ -111,14 +111,14 @@ const categoryCopy: Record<DeviceType, CategoryCopy> = {
       brand('Lenovo', 'https://cdn.simpleicons.org/lenovo'),
       brand('Xiaomi', 'https://cdn.simpleicons.org/xiaomi'),
       brand('OnePlus', 'https://cdn.simpleicons.org/oneplus'),
-      brand('Realme', 'https://cdn.simpleicons.org/realme'),
+      brand('Realme', '/brands/realme.svg'),
       brand('Oppo', 'https://cdn.simpleicons.org/oppo'),
       brand('Vivo', 'https://cdn.simpleicons.org/vivo'),
       brand('Honor', 'https://cdn.simpleicons.org/honor'),
       brand('Huawei', 'https://cdn.simpleicons.org/huawei'),
-      brand('Microsoft', 'https://cdn.simpleicons.org/microsoft'),
+      brand('Microsoft', '/brands/microsoft.svg'),
       brand('Nokia', 'https://cdn.simpleicons.org/nokia'),
-      brand('Amazon', 'https://cdn.simpleicons.org/amazon'),
+      brand('Amazon', '/brands/amazon.svg'),
       brand('Other', undefined, '+'),
     ],
   },
@@ -156,12 +156,12 @@ const categoryCopy: Record<DeviceType, CategoryCopy> = {
     brands: [
       brand('Apple', 'https://cdn.simpleicons.org/apple'),
       brand('Samsung', 'https://cdn.simpleicons.org/samsung'),
-      brand('Sony', 'https://cdn.simpleicons.org/sony'),
-      brand('Nintendo', 'https://cdn.simpleicons.org/nintendo'),
-      brand('Microsoft', 'https://cdn.simpleicons.org/microsoft'),
+      brand('Sony', '/brands/sony.svg'),
+      brand('Nintendo', '/brands/nintendo.svg'),
+      brand('Microsoft', '/brands/microsoft.svg'),
       brand('Garmin', 'https://cdn.simpleicons.org/garmin'),
-      brand('GoPro', 'https://cdn.simpleicons.org/gopro'),
-      brand('Canon', 'https://cdn.simpleicons.org/canon'),
+      brand('GoPro', '/brands/gopro.svg'),
+      brand('Canon', '/brands/canon.svg'),
       brand('Nikon', 'https://cdn.simpleicons.org/nikon'),
       brand('Bose', 'https://cdn.simpleicons.org/bose'),
       brand('JBL', 'https://cdn.simpleicons.org/jbl'),
@@ -300,6 +300,8 @@ export default function SellDeviceForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successId, setSuccessId] = useState<string | null>(null);
+  const [showAllBrands, setShowAllBrands] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [form, setForm] = useState({
     deviceType: initialCategory,
     brand: '',
@@ -321,16 +323,31 @@ export default function SellDeviceForm() {
     problems: [] as string[],
     accessories: [] as string[],
     images: [] as string[],
+    imagesHtml: '',
   });
 
   const currentCopy = categoryCopy[form.deviceType];
   const currentQuestions = questionsByCategory[form.deviceType];
   const currentProblems = problemsByCategory[form.deviceType];
 
-  const update = (field: keyof typeof form, value: string | string[] | Record<string, string>) => setForm((current) => ({ ...current, [field]: value }));
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setCurrentUser(user);
+      if (user) {
+        setForm((current) => ({
+          ...current,
+          userName: current.userName || user.displayName || '',
+          customerEmail: current.customerEmail || user.email || '',
+        }));
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const update = (field: keyof typeof form, value: any) => setForm((current) => ({ ...current, [field]: value }));
   const toggle = (field: 'defects' | 'problems' | 'accessories', value: string) => setForm((current) => ({ ...current, [field]: current[field].includes(value) ? current[field].filter((item) => item !== value) : [...current[field], value] }));
   const goBack = () => setStep((current) => Math.max(1, current - 1) as Step);
-  const goNext = () => setStep((current) => Math.min(6, current + 1) as Step);
+  const goNext = () => setStep((current) => Math.min(7, current + 1) as Step);
 
   const canContinue =
     step === 1 ? Boolean(form.brand) :
@@ -354,9 +371,21 @@ export default function SellDeviceForm() {
     setLoading(true);
     setError('');
     try {
+      if (!auth.currentUser) throw new Error('Please sign in with Google before requesting a pickup.');
+      await setDoc(doc(db, 'users', auth.currentUser.uid), {
+        name: form.userName,
+        email: form.customerEmail,
+        phone: form.customerPhone,
+        whatsappNumber: form.whatsappNumber,
+        address: form.locationAddress,
+        city: form.locationCity,
+        state: form.locationState,
+        pincode: form.locationPincode,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
       const result = await addDoc(collection(db, 'sellRequests'), {
         ...form,
-        userId: auth.currentUser?.uid || null,
+        userId: auth.currentUser.uid,
         expectedPrice: Number(form.expectedPrice),
         status: 'pickup_requested',
         paymentStatus: 'pending_inspection',
@@ -379,16 +408,38 @@ export default function SellDeviceForm() {
   return <form onSubmit={submit} className="sell-form-card">
     <div className="sell-form-heading">
       <span className="eyebrow">{currentCopy.eyebrow}</span>
-      <h2>{step === 1 ? currentCopy.title : step === 2 ? 'Enter your device model.' : step === 3 ? 'Tell us more about your device.' : step === 4 ? 'Device condition and accessories.' : step === 5 ? 'Functional or Physical Problems' : 'Your pickup details.'}</h2>
-      <p>{step === 1 ? currentCopy.description : step === 2 ? 'Choose the storage and RAM options for an accurate inspection quote.' : step === 3 ? 'These answers help us prepare an accurate inspection quote.' : step === 4 ? 'Select everything that applies. Final value is confirmed at pickup.' : step === 5 ? 'Please select all applicable issues to receive an accurate quote.' : 'Sign in with Google if you want, then add expected price and location details.'}</p>
+      <h2>{step === 1 ? currentCopy.title : step === 2 ? 'Enter your device model.' : step === 3 ? 'Tell us more about your device.' : step === 4 ? 'Device condition and accessories.' : step === 5 ? 'Functional or Physical Problems' : step === 6 ? 'Upload device images.' : 'Your pickup details.'}</h2>
+      <p>{step === 1 ? currentCopy.description : step === 2 ? 'Choose the storage and RAM options for an accurate inspection quote.' : step === 3 ? 'These answers help us prepare an accurate inspection quote.' : step === 4 ? 'Select everything that applies. Final value is confirmed at pickup.' : step === 5 ? 'Please select all applicable issues to receive an accurate quote.' : step === 6 ? 'Show us your device condition by uploading up to 6 pictures.' : 'Sign in with Google if you want, then add expected price and location details.'}</p>
     </div>
 
     {step === 1 && <div style={{ marginTop: 22 }}>
       <div className="sell-benefits" style={{ justifyContent: 'flex-start', marginTop: 0, marginBottom: 22 }}>{benefits.map((item) => <span key={item}>{item}</span>)}</div>
-      <div className="field"><span>{currentCopy.brandLabel}</span><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(118px, 1fr))', gap: 10, marginTop: 8 }}>{currentCopy.brands.map((item) => <button key={item.name} type="button" onClick={() => update('brand', item.name)} style={{ minHeight: 74, padding: '10px 9px', border: form.brand === item.name ? '2px solid var(--violet-700)' : '1px solid #E3D9F9', borderRadius: 12, background: form.brand === item.name ? 'var(--lavender-100)' : '#fff', display: 'grid', placeItems: 'center', gap: 6, fontWeight: 700, cursor: 'pointer' }}>{item.logo ? (
+      <div className="field"><span>{currentCopy.brandLabel}</span><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(118px, 1fr))', gap: 10, marginTop: 8 }}>
+        {((showAllBrands || currentCopy.brands.length <= 4) ? currentCopy.brands : currentCopy.brands.slice(0, 4)).map((item) => <button key={item.name} type="button" onClick={() => update('brand', item.name)} style={{ minHeight: 74, padding: '10px 9px', border: form.brand === item.name ? '2px solid var(--violet-700)' : '1px solid #E3D9F9', borderRadius: 12, background: form.brand === item.name ? 'var(--lavender-100)' : '#fff', display: 'grid', placeItems: 'center', gap: 6, fontWeight: 700, cursor: 'pointer' }}>{item.logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={item.logo} alt="" width="24" height="24" />
-      ) : <b>{item.mark}</b>}<span style={{ margin: 0 }}>{item.name}</span></button>)}</div></div>
+      ) : <b>{item.mark}</b>}<span style={{ margin: 0 }}>{item.name}</span></button>)}
+        {currentCopy.brands.length > 4 && (
+          <button
+            type="button"
+            onClick={() => setShowAllBrands(!showAllBrands)}
+            style={{
+              minHeight: 74,
+              padding: '10px 9px',
+              border: '1px dashed var(--violet-700)',
+              borderRadius: 12,
+              background: '#fff',
+              display: 'grid',
+              placeItems: 'center',
+              fontWeight: 700,
+              cursor: 'pointer',
+              color: 'var(--violet-700)'
+            }}
+          >
+            {showAllBrands ? 'Show Less' : '+ More Brands'}
+          </button>
+        )}
+      </div></div>
     </div>}
 
     {step === 2 && <div className="sell-form-grid">
@@ -400,27 +451,117 @@ export default function SellDeviceForm() {
 
     {step === 3 && <div style={{ marginTop: 22 }}>{currentQuestions.map(([key, title, hint]) => <div className="field" key={key} style={{ marginBottom: 18 }}><span>{title}</span><small>{hint}</small><div style={{ display: 'flex', gap: 10, marginTop: 8 }}>{['Yes', 'No'].map((answer) => <button type="button" key={answer} onClick={() => setForm((current) => ({ ...current, conditionAnswers: { ...current.conditionAnswers, [key]: answer } }))} className={form.conditionAnswers[key] === answer ? 'btn-primary' : 'btn-ghost'}>{answer}</button>)}</div></div>)}</div>}
 
-    {step === 4 && <div className="field" style={{ marginTop: 22 }}><span>Select screen/body defects that apply</span>{defects.map((item) => <label key={item} style={{ display: 'block', marginTop: 10 }}><input type="checkbox" checked={form.defects.includes(item)} onChange={() => toggle('defects', item)} /> {item}</label>)}</div>}
+    {step === 4 && <section className="condition-section" aria-labelledby="condition-title"><div className="condition-section-heading"><span className="eyebrow">Quick condition check</span><h3 id="condition-title">Screen &amp; body condition</h3><p>Select every visible issue that applies. This helps us prepare a fair pickup quote.</p></div><div className="condition-options">{defects.map((item) => <label key={item} className="condition-option"><input type="checkbox" checked={form.defects.includes(item)} onChange={() => toggle('defects', item)} /><span>{item}</span></label>)}</div></section>}
 
     {step === 5 && <div className="field" style={{ marginTop: 22 }}><span>Functional or Physical Problems</span><small>Please select all applicable issues to receive an accurate quote.</small><div className="problem-options">{currentProblems.map((item) => <label key={item} className="problem-option"><input type="checkbox" checked={form.problems.includes(item)} onChange={() => toggle('problems', item)} /><span>{item}</span></label>)}</div></div>}
 
-    {step === 6 && <div className="sell-form-grid">
-      <div style={{ gridColumn: '1/-1' }}><button type="button" className="btn-ghost" onClick={signInWithGoogle}><span aria-hidden="true">G</span> Continue with Google</button></div>
-      <label className="field"><span>Expected price (Rs.)</span><input required type="number" min="0" value={form.expectedPrice} onChange={(e) => update('expectedPrice', e.target.value)} placeholder="e.g. 25000" /></label>
-      <label className="field"><span>Your name</span><input required value={form.userName} onChange={(e) => update('userName', e.target.value)} /></label>
-      <label className="field"><span>Phone number</span><input required type="tel" value={form.customerPhone} onChange={(e) => update('customerPhone', e.target.value)} placeholder="10-digit mobile number" /></label>
-      <label className="field"><span>WhatsApp number</span><input required type="tel" value={form.whatsappNumber} onChange={(e) => update('whatsappNumber', e.target.value)} placeholder="For pickup/status updates" /></label>
-      <label className="field"><span>Email</span><input required type="email" value={form.customerEmail} onChange={(e) => update('customerEmail', e.target.value)} /></label>
-      <label className="field"><span>Full address</span><input required value={form.locationAddress} onChange={(e) => update('locationAddress', e.target.value)} placeholder="House / flat, street, area" /></label>
-      <label className="field"><span>City</span><input required value={form.locationCity} onChange={(e) => update('locationCity', e.target.value)} /></label>
-      <label className="field"><span>State</span><input required value={form.locationState} onChange={(e) => update('locationState', e.target.value)} /></label>
-      <label className="field"><span>Pincode</span><input required value={form.locationPincode} onChange={(e) => update('locationPincode', e.target.value)} /></label>
+    {step === 6 && <div style={{ marginTop: 22 }}>
+      <div className="field">
+        <span>Upload Device Images (Up to 6 images)</span>
+        <small style={{ display: 'block', marginBottom: 12 }}>Upload clear photos of the front, back, and sides of your device.</small>
+        
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []).slice(0, 6);
+              if (files.length === 0) return;
+              
+              const readPromises = files.map((file) => {
+                return new Promise<string>((resolve) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.readAsDataURL(file);
+                });
+              });
+              
+              Promise.all(readPromises).then((base64Strings) => {
+                const htmlString = `
+                  <div class="device-images-rendered" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                    ${base64Strings.map((base64) => `
+                      <img src="${base64}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1.5px solid #E3D9F9;" alt="Device upload" />
+                    `).join('')}
+                  </div>
+                `.trim();
+                update('imagesHtml', htmlString);
+              });
+            }}
+            style={{ display: 'none' }}
+            id="device-images-input"
+          />
+          <label
+            htmlFor="device-images-input"
+            className="btn-ghost"
+            style={{
+              padding: '12px 20px',
+              border: '2px dashed var(--violet-700)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              color: 'var(--violet-700)',
+              display: 'inline-block'
+            }}
+          >
+            📷 Choose Photos (Max 6)
+          </label>
+          
+          {form.imagesHtml && (
+            <button
+              type="button"
+              onClick={() => update('imagesHtml', '')}
+              className="btn-ghost"
+              style={{
+                borderColor: '#FEE2E2',
+                color: '#EF4444',
+                padding: '12px 20px',
+                borderRadius: '12px',
+              }}
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+
+        {form.imagesHtml && (
+          <div style={{ border: '1px solid #E3D9F9', borderRadius: '12px', padding: '12px', background: '#FAF7FF' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1E1B29', display: 'block', marginBottom: 8 }}>Preview Rendered HTML:</span>
+            <div dangerouslySetInnerHTML={{ __html: form.imagesHtml }} />
+          </div>
+        )}
+      </div>
+    </div>}
+
+    {step === 7 && <div className="sell-form-grid">
+      {!currentUser ? (
+        <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', border: '1px solid #E3D9F9', borderRadius: '16px', background: '#FAF7FF', textAlign: 'center', gap: '16px' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1E1B29' }}>Please verify your identity to proceed</h3>
+          <p style={{ fontSize: '0.88rem', color: '#6E6683', maxWidth: '340px' }}>Sign in or Sign up with Google to secure your request and proceed with the pickup details.</p>
+          <button type="button" onClick={signInWithGoogle} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '12px 24px', cursor: 'pointer' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/></svg>
+            Sign in / Sign up with Google
+          </button>
+        </div>
+      ) : (
+        <>
+          <label className="field"><span>Expected price (Rs.)</span><input required type="number" min="0" value={form.expectedPrice} onChange={(e) => update('expectedPrice', e.target.value)} placeholder="e.g. 25000" /></label>
+          <label className="field"><span>Your name</span><input required value={form.userName} onChange={(e) => update('userName', e.target.value)} /></label>
+          <label className="field"><span>Phone number</span><input required type="tel" value={form.customerPhone} onChange={(e) => update('customerPhone', e.target.value)} placeholder="10-digit mobile number" /></label>
+          <label className="field"><span>WhatsApp number</span><input required type="tel" value={form.whatsappNumber} onChange={(e) => update('whatsappNumber', e.target.value)} placeholder="For pickup/status updates" /></label>
+          <label className="field"><span>Email</span><input required type="email" value={form.customerEmail} onChange={(e) => update('customerEmail', e.target.value)} /></label>
+          <label className="field"><span>Full address</span><input required value={form.locationAddress} onChange={(e) => update('locationAddress', e.target.value)} placeholder="House / flat, street, area" /></label>
+          <label className="field"><span>City</span><input required value={form.locationCity} onChange={(e) => update('locationCity', e.target.value)} /></label>
+          <label className="field"><span>State</span><input required value={form.locationState} onChange={(e) => update('locationState', e.target.value)} /></label>
+          <label className="field"><span>Pincode</span><input required value={form.locationPincode} onChange={(e) => update('locationPincode', e.target.value)} /></label>
+        </>
+      )}
     </div>}
 
     {error && <p className="track-error">{error}</p>}
     <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
       {step > 1 && <button className="btn-ghost" type="button" onClick={goBack}>Back</button>}
-      {step < 6 ? (canContinue && <button className="btn-primary" type="button" onClick={goNext}>Continue →</button>) : <button className="btn-primary sell-submit" disabled={loading}>{loading ? 'Saving your request...' : 'Request pickup →'}</button>}
+      {step < 7 ? (canContinue && <button className="btn-primary" type="button" onClick={goNext}>Continue →</button>) : (currentUser && <button className="btn-primary sell-submit" disabled={loading}>{loading ? 'Saving your request...' : 'Request pickup →'}</button>)}
     </div>
   </form>;
 }

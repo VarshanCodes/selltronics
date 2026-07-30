@@ -23,10 +23,12 @@ type SellRequest = {
   defects?: string[]; 
   problems?: string[]; 
   images?: string[]; 
+  imagesHtml?: string;
   locationAddress?: string;
   locationCity?: string;
   locationState?: string;
   locationPincode?: string;
+  days?: string;
 };
 
 const statuses = [
@@ -35,6 +37,7 @@ const statuses = [
   'inspected', 
   'YES CUSTOMER SOLD', 
   'CUSTOMER NOT SOLD', 
+  'Cancelled',
   'completed', 
   'rejected'
 ];
@@ -63,6 +66,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
   const [editDeviceName, setEditDeviceName] = useState('');
   const [editBrand, setEditBrand] = useState('');
   const [editExpectedPrice, setEditExpectedPrice] = useState('');
+  const [editDays, setEditDays] = useState('');
 
   useEffect(() => {
     if (propRequests) {
@@ -108,6 +112,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
     setEditDeviceName(request.deviceName || '');
     setEditBrand(request.brand || '');
     setEditExpectedPrice(String(request.expectedPrice || 0));
+    setEditDays(request.days || '');
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -127,6 +132,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
         deviceName: editDeviceName,
         brand: editBrand,
         expectedPrice: Number(editExpectedPrice),
+        days: editDays,
       };
       await updateDoc(doc(db, 'sellRequests', editing.id), payload);
       alert('Seller details updated successfully!');
@@ -229,7 +235,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
                   <td>
                     <span className={`badge ${
                       request.status === 'YES CUSTOMER SOLD' || request.status === 'completed' ? 'success' : 
-                      request.status === 'CUSTOMER NOT SOLD' || request.status === 'rejected' ? 'danger' : 
+                      request.status === 'CUSTOMER NOT SOLD' || request.status === 'rejected' || request.status === 'Cancelled' ? 'danger' : 
                       'pending'
                     }`}>
                       {(request.status || 'pickup requested').replaceAll('_', ' ')}
@@ -260,11 +266,17 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
               <p><strong className="text-[#1E1B29]">Seller:</strong> {selected.userName} · {selected.customerPhone} · Email: {selected.customerEmail || '—'} · WhatsApp: {selected.whatsappNumber || '—'}</p>
               <p><strong className="text-[#1E1B29]">Device:</strong> <b>{selected.brand} {selected.deviceName}</b> ({selected.storage || 'N/A'} · {selected.specs || 'N/A'})</p>
               <p><strong className="text-[#1E1B29]">Location:</strong> {selected.locationAddress || 'N/A'}, {selected.locationCity || ''}, {selected.locationState || ''} {selected.locationPincode || ''}</p>
+              <p><strong className="text-[#1E1B29]">Receiver Days:</strong> {selected.days ? `${selected.days}` : 'Not scheduled yet'}</p>
               <p><strong className="text-[#1E1B29]">Defects Chosen:</strong> {selected.defects?.join(', ') || 'None'}</p>
               <p><strong className="text-[#1E1B29]">Problems Chosen:</strong> {selected.problems?.join(', ') || 'None'}</p>
             </div>
 
-            {selected.images?.length ? (
+            {selected.imagesHtml ? (
+              <div style={{ marginBottom: '18px' }}>
+                <p className="font-bold text-sm mb-2">Uploaded Device Images (Rendered HTML):</p>
+                <div dangerouslySetInnerHTML={{ __html: selected.imagesHtml }} />
+              </div>
+            ) : selected.images?.length ? (
               <div style={{ marginBottom: '18px' }}>
                 <p className="font-bold text-sm mb-2">Uploaded Device Images:</p>
                 <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8 }}>
@@ -346,7 +358,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
                 </label>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <label className="field block">
                   <span className="font-bold">Device Brand</span>
                   <input required value={editBrand} onChange={(e) => setEditBrand(e.target.value)} />
@@ -358,6 +370,10 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
                 <label className="field block">
                   <span className="font-bold">Expected Price (₹)</span>
                   <input required type="number" value={editExpectedPrice} onChange={(e) => setEditExpectedPrice(e.target.value)} />
+                </label>
+                <label className="field block">
+                  <span className="font-bold">Estimated Days</span>
+                  <input value={editDays} onChange={(e) => setEditDays(e.target.value)} placeholder="e.g. 2 days" />
                 </label>
               </div>
 

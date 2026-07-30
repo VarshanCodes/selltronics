@@ -4,18 +4,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { useEffect, useId, useRef, useState } from 'react';
-import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 
 const links = [
   { label: 'Sell a device', href: '/sell' },
   { label: 'Shop devices', href: '/shop' },
-  { label: 'Track order', href: '/track-purchase' },
+  { label: 'My orders & requests', href: '/profile' },
   { label: 'Why Selltronics', href: '/#why' },
 ];
 
 function BrandMark() {
-  return <span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 3h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.8"/><path d="M11 18h2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg></span>;
+  return <span className="brand-mark" aria-hidden="true"><img src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-30_18-01-53-939.png" alt="" /></span>;
 }
 
 function CloseIcon() {
@@ -41,6 +41,10 @@ export default function Navbar() {
   const logout = async () => {
     await signOut(auth);
     close();
+  };
+  const signIn = async () => {
+    try { await signInWithPopup(auth, new GoogleAuthProvider()); close(); }
+    catch (error) { console.error('Google sign-in failed', error); }
   };
 
   useEffect(() => {
@@ -76,6 +80,7 @@ export default function Navbar() {
           <span>{user?.displayName?.slice(0, 1).toUpperCase() || 'G'}</span>
           <div><b>{user?.displayName || 'Guest'}</b><small>{user?.email || 'Sign in during checkout to save your details.'}</small></div>
         </div>
+        {!user ? <button type="button" className="drawer-cta" onClick={signIn}>Continue with Google</button> : <Link href="/profile" className="drawer-cta" onClick={close}>Open my profile</Link>}
         <p className="drawer-intro">Everything you need to buy, sell, and track your device.</p>
         <nav aria-label="Mobile navigation">{links.map((link) => <Link key={link.href} href={link.href} onClick={close} aria-current={isActive(link.href) ? 'page' : undefined}><span>{link.label}</span><ChevronIcon /></Link>)}</nav>
         <Link href="/sell" className="drawer-cta" onClick={close}>Get an instant quote</Link>

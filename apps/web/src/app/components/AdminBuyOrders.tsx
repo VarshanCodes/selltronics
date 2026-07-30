@@ -17,6 +17,7 @@ interface BuyOrder {
   status: string; // "Pending Delivery" | "YES CUSTOMER BUYED" | "CUSTOMER NOT BUYED" | "Cancelled" | etc.
   createdAt: any;
   productId: string;
+  days?: string;
 }
 
 export default function AdminBuyOrders() {
@@ -34,6 +35,7 @@ export default function AdminBuyOrders() {
   const [editPrice, setEditPrice] = useState("");
   const [editAmountPaid, setEditAmountPaid] = useState("");
   const [editStatus, setEditStatus] = useState("");
+  const [editDays, setEditDays] = useState("");
 
   const [saving, setSaving] = useState(false);
 
@@ -80,6 +82,7 @@ export default function AdminBuyOrders() {
     setEditPrice(String(order.price || 0));
     setEditAmountPaid(order.amountPaid != null ? String(order.amountPaid) : "");
     setEditStatus(order.status || "Pending Delivery");
+    setEditDays(order.days || "");
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -99,6 +102,7 @@ export default function AdminBuyOrders() {
         price: Number(editPrice),
         amountPaid: editAmountPaid ? Number(editAmountPaid) : null,
         status: editStatus,
+        days: editDays,
       };
 
       await updateDoc(orderRef, payload);
@@ -192,6 +196,7 @@ export default function AdminBuyOrders() {
                   <p className="mb-1"><strong className="text-[#6E6683]">Phone:</strong> {order.customerPhone}</p>
                   <p className="mb-1"><strong className="text-[#6E6683]">WhatsApp:</strong> {order.whatsappNumber || "Same as Phone"}</p>
                   <p className="mb-1"><strong className="text-[#6E6683]">Email:</strong> {order.customerEmail || "N/A"}</p>
+                  <p className="mb-1"><strong className="text-[#6E6683]">Estimated Delivery:</strong> {order.days ? `${order.days}` : "Not scheduled yet"}</p>
                 </div>
                 <div>
                   <p className="mb-2"><strong className="text-[#6E6683]">Delivery Address:</strong></p>
@@ -272,7 +277,7 @@ export default function AdminBuyOrders() {
                 <input required value={editDeviceName} onChange={(e) => setEditDeviceName(e.target.value)} />
               </label>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <label className="field block">
                   <span className="font-bold">Quoted Price (₹)</span>
                   <input required type="number" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
@@ -289,6 +294,10 @@ export default function AdminBuyOrders() {
                     <option value="CUSTOMER NOT BUYED">CUSTOMER NOT BUYED</option>
                     <option value="Cancelled">Cancelled</option>
                   </select>
+                </label>
+                <label className="field block">
+                  <span className="font-bold">Estimated Days</span>
+                  <input value={editDays} onChange={(e) => setEditDays(e.target.value)} placeholder="e.g. 3 days" />
                 </label>
               </div>
 

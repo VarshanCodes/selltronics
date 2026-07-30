@@ -7,15 +7,22 @@ service cloud.firestore {
       allow read: if resource.data.status == 'Available';
     }
 
-    // Customers can submit requests. Do not grant public reads, updates, or deletes.
+    // A signed-in customer can access only their own history. Administrative
+    // actions are deliberately handled by the password-protected admin service.
     match /sellRequests/{requestId} {
-      allow create: if request.resource.data.name is string
-                    && request.resource.data.phone is string;
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+      allow read, update: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
     match /buyOrders/{orderId} {
-      allow create: if request.resource.data.customerName is string
-                    && request.resource.data.phone is string;
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+      allow read, update: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read, create, update: if request.auth != null && request.auth.uid == userId;
     }
 
     // All other collections remain private. Admin operations should be performed

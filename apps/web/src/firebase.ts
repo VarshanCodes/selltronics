@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
 
 // Your web app's Firebase configuration
 // (You will add the actual values to your .env.local file later)
@@ -20,5 +21,6 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 // Initialize Firestore (your database)
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
-export { app, db, auth };
+export { app, db, auth, storage };

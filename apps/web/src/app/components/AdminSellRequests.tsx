@@ -27,6 +27,7 @@ type SellRequest = {
   locationCity?: string;
   locationState?: string;
   locationPincode?: string;
+  days?: string;
 };
 
 const statuses = [
@@ -35,6 +36,7 @@ const statuses = [
   'inspected', 
   'YES CUSTOMER SOLD', 
   'CUSTOMER NOT SOLD', 
+  'Cancelled',
   'completed', 
   'rejected'
 ];
@@ -50,6 +52,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
   const [status, setStatus] = useState('');
   const [finalAmount, setFinalAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Cash');
+  const [pickupDays, setPickupDays] = useState('');
 
   // Edit fields
   const [editName, setEditName] = useState('');
@@ -93,6 +96,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
     setStatus(request.status || 'pickup_requested');
     setFinalAmount(request.finalAmount ? String(request.finalAmount) : '');
     setPaymentMethod(request.paymentMethod || 'Cash');
+    setPickupDays(request.days || '');
   };
 
   const handleOpenEdit = (request: SellRequest) => {
@@ -159,6 +163,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
         status,
         finalAmount: finalAmount ? Number(finalAmount) : null,
         paymentMethod,
+        days: pickupDays,
         paymentStatus: status === 'YES CUSTOMER SOLD' || status === 'completed' ? 'paid' : 'pending_inspection',
         updatedAt: new Date()
       });
@@ -247,7 +252,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
                   <td>
                     <span className={`badge ${
                       request.status === 'YES CUSTOMER SOLD' || request.status === 'completed' ? 'success' : 
-                      request.status === 'CUSTOMER NOT SOLD' || request.status === 'rejected' ? 'danger' : 
+                      request.status === 'CUSTOMER NOT SOLD' || request.status === 'rejected' || request.status === 'Cancelled' ? 'danger' : 
                       'pending'
                     }`}>
                       {(request.status || 'pickup requested').replaceAll('_', ' ')}
@@ -316,6 +321,10 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
                   <option>Google Pay</option>
                   <option>Bank Transfer</option>
                 </select>
+              </label>
+              <label className="field">
+                <span>Pickup timeline for customer</span>
+                <input value={pickupDays} onChange={(e) => setPickupDays(e.target.value)} placeholder="e.g. Pickup in 2 days" />
               </label>
             </div>
 
