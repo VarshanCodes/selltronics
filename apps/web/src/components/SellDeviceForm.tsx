@@ -301,6 +301,22 @@ const sellCategories = [
   { name: 'Other devices', sub: 'Watches, consoles & accessories', image: 'https://ik.imagekit.io/e8vtmc5nh/file_00000000ae90820ba15f7b2a65f2ca9c.png', category: 'Other devices' },
 ];
 
+function sanitizeValue(value: any): any {
+  if (value === undefined) return '';
+  if (value === null) return null;
+  if (Array.isArray(value)) return value.map(sanitizeValue);
+  if (typeof value === 'object') {
+    const sanitized: Record<string, any> = {};
+    for (const key in value) {
+      if (Object.prototype.hasOwnProperty.call(value, key)) {
+        sanitized[key] = sanitizeValue(value[key]);
+      }
+    }
+    return sanitized;
+  }
+  return value;
+}
+
 export default function SellDeviceForm() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get('category');
@@ -389,18 +405,26 @@ export default function SellDeviceForm() {
     setError('');
     try {
       if (!auth.currentUser) throw new Error('Please sign in with Google before requesting a pickup.');
-      await setDoc(doc(db, 'users', auth.currentUser.uid), {
-        name: form.userName,
-        email: form.customerEmail,
-        phone: form.customerPhone,
-        whatsappNumber: form.whatsappNumber,
-        address: form.locationAddress,
-        city: form.locationCity,
-        state: form.locationState,
-        pincode: form.locationPincode,
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
-      const result = await addDoc(collection(db, 'sell_requests'), {
+
+      // 1. Try to save user profile details (wrapped to prevent blocking the main sell request)
+      try {
+        await setDoc(doc(db, 'users', auth.currentUser.uid), {
+          name: form.userName || '',
+          email: form.customerEmail || '',
+          phone: form.customerPhone || '',
+          whatsappNumber: form.whatsappNumber || '',
+          address: form.locationAddress || '',
+          city: form.locationCity || '',
+          state: form.locationState || '',
+          pincode: form.locationPincode || '',
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      } catch (userError) {
+        console.warn('Non-blocking user collection write failed:', userError);
+      }
+
+      // 2. Build the sanitized payload for sell request
+      const rawPayload = {
         deviceType: form.deviceType || '',
         brand: form.brand || '',
         deviceName: form.deviceName || '',
@@ -429,11 +453,17 @@ export default function SellDeviceForm() {
         paymentMethod: null,
         createdAt: serverTimestamp(),
         submittedAt: serverTimestamp(),
-      });
+      };
+
+      const sanitizedPayload = sanitizeValue(rawPayload);
+
+      // 3. Write to Firestore 'sell_requests' collection
+      const result = await addDoc(collection(db, 'sell_requests'), sanitizedPayload);
       setSuccessId(result.id);
     } catch (issue) {
-      console.error(issue);
-      setError('We could not submit your request. Please try again.');
+      console.error('Firestore submission error details:', issue);
+      const msg = issue instanceof Error ? issue.message : String(issue);
+      setError(`We could not submit your request: ${msg}. Please try again.`);
     } finally {
       setLoading(false);
     }
@@ -449,7 +479,7 @@ export default function SellDeviceForm() {
           <h2>Select your device category to begin</h2>
           <p>Choose the type of device you want to sell for a secure, doorstep valuation.</p>
         </div>
-        <div className="device-grid-home" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <div className="device-grid-home">
           {sellCategories.map((item) => (
             <button
               key={item.name}
@@ -464,26 +494,20 @@ export default function SellDeviceForm() {
               className="device-category"
               style={{
                 textAlign: 'left',
-                border: '1px solid #efe9fb',
-                borderRadius: '20px',
-                background: '#fff',
-                padding: '22px',
-                minHeight: '200px',
                 width: '100%',
                 cursor: 'pointer',
-                display: 'block',
-                position: 'relative'
+                display: 'block'
               }}
             >
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--ink)' }}>{item.name}</h3>
-                <p style={{ margin: '5px 0 0 0', color: 'var(--gray)', fontSize: '0.76rem', lineHeight: '1.4', maxWidth: '170px' }}>{item.sub}</p>
+                <p>{item.sub}</p>
               </div>
-              <span className="device-arrow" style={{ right: 18, top: 18, display: 'grid', placeItems: 'center' }}>
+              <span className="device-arrow">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
               </span>
-              <div className="device-drawing" style={{ position: 'absolute', right: 21, bottom: 15, width: 86, height: 86, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <div className="device-drawing">
+                <img src={item.image} alt={item.name} />
               </div>
             </button>
           ))}
