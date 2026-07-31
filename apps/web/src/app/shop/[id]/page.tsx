@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc, addDoc, collection, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, addDoc, collection, serverTimestamp, setDoc } from "firebase/firestore";
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, type User } from "firebase/auth";
 import Link from "next/link";
 import { db } from "../../../config/firebase";
@@ -39,6 +39,7 @@ export default function ProductPage() {
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [ordering, setOrdering] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const orderDetailsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => onAuthStateChanged(auth, (signedInUser) => {
     setUser(signedInUser);
@@ -78,6 +79,11 @@ export default function ProductPage() {
     fetchProduct();
   }, [params.id, router]);
 
+  useEffect(() => {
+    if (!ordering) return;
+    requestAnimationFrame(() => orderDetailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }, [ordering]);
+
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!product) return;
@@ -85,28 +91,42 @@ export default function ProductPage() {
     setSubmitting(true);
     try {
       if (!user) throw new Error('Sign in is required to place an order.');
-      await setDoc(doc(db, 'users', user.uid), {
-        name: formData.customerName, email: formData.customerEmail, phone: formData.customerPhone,
-        whatsappNumber: formData.whatsappNumber, address: formData.deliveryAddress, updatedAt: serverTimestamp(),
-      }, { merge: true });
+      const text = (value: unknown) => typeof value === 'string' ? value.trim() : '';
+      const customer = {
+        name: text(formData.customerName),
+        email: text(formData.customerEmail),
+        phone: text(formData.customerPhone),
+        whatsappNumber: text(formData.whatsappNumber),
+        address: text(formData.deliveryAddress),
+      };
+
+      // A customer profile is helpful for the next checkout, but an order must
+      // not be lost if that optional profile update is unavailable.
+      try {
+        await setDoc(doc(db, 'users', user.uid), {
+          ...customer,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      } catch (profileError) {
+        console.warn('Could not save the customer profile while ordering:', profileError);
+      }
       const orderRef = await addDoc(collection(db, "buyOrders"), {
         productId: product.id,
-        deviceName: `${product.brand} ${product.deviceName}`,
-        price: product.price,
-        customerName: formData.customerName,
-        customerPhone: formData.customerPhone,
-        whatsappNumber: formData.whatsappNumber,
-        customerEmail: formData.customerEmail,
-        deliveryAddress: formData.deliveryAddress,
+        deviceName: `${text(product.brand)} ${text(product.deviceName)}`.trim(),
+        price: Number.isFinite(Number(product.price)) ? Number(product.price) : 0,
+        customerName: customer.name,
+        customerPhone: customer.phone,
+        whatsappNumber: customer.whatsappNumber,
+        customerEmail: customer.email,
+        deliveryAddress: customer.address,
         userId: user.uid,
         status: "Pending Delivery",
         createdAt: serverTimestamp(),
       });
 
       setOrderId(orderRef.id);
-      await updateDoc(doc(db, 'products', product.id), { status: 'Reserved' });
     } catch (error) {
-      console.error("Error creating order:", error);
+      console.error("Error creating buy order:", error);
       alert("Unable to place order right now. Please try again.");
     } finally {
       setSubmitting(false);
@@ -155,8 +175,8 @@ export default function ProductPage() {
         </Link>
       </div>
 
-      <div className="max-w-[1000px] mx-auto px-6 pt-10">
-        <div className="bg-white rounded-3xl border-[1.5px] border-[#EFE9FB] p-8 md:p-12 flex flex-col md:flex-row gap-12 shadow-sm">
+      <div className="max-w-[1000px] mx-auto px-4 sm:px-6 pt-6 sm:pt-10">
+        <div className="bg-white rounded-3xl border-[1.5px] border-[#EFE9FB] p-5 sm:p-8 md:p-12 flex flex-col md:flex-row gap-7 sm:gap-12 shadow-sm">
           
           {/* Left: Image Container with Slider */}
           <div className="w-full md:w-1/2 flex flex-col gap-4">
@@ -221,8 +241,8 @@ export default function ProductPage() {
             </h1>
             <p className="text-[#6E6683] mb-6">{product.storage} • {product.specs}</p>
 
-            <div className="bg-[#FAF7FF] border border-[#E3D9F9] rounded-xl p-5 mb-6">
-              <div className="flex items-center justify-between gap-4">
+            <div className="bg-[#FAF7FF] border border-[#E3D9F9] rounded-2xl p-4 sm:p-5 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <h3 className="font-bold text-[#1E1B29] text-[0.9rem] uppercase tracking-wider text-gray-500">Price</h3>
                   <div className="flex items-baseline gap-2 mt-1">
@@ -233,10 +253,10 @@ export default function ProductPage() {
                   </div>
                 </div>
                 {!ordering && (
-                  <button 
+                  <button
                     type="button" 
                     onClick={() => setOrdering(true)} 
-                    className="rounded-xl bg-[#5B21B6] px-8 py-3.5 font-bold text-white transition-colors hover:bg-[#3D1E7A] cursor-pointer shadow-md"
+                    className="w-full sm:w-auto shrink-0 rounded-xl bg-[#5B21B6] px-6 py-3.5 font-bold text-white transition-all hover:bg-[#3D1E7A] active:scale-[0.98] cursor-pointer shadow-md"
                   >
                     Buy Device
                   </button>
@@ -245,7 +265,7 @@ export default function ProductPage() {
             </div>
 
             {ordering && (
-              <div className="mt-4 border-t border-[#EFE9FB] pt-6">
+              <div ref={orderDetailsRef} className="mt-4 scroll-mt-24 border-t border-[#EFE9FB] pt-6">
                 {!user ? (
                   <div className="rounded-2xl border border-[#E3D9F9] bg-[#FAF7FF] p-6 text-center">
                     <h2 className="text-lg font-bold text-[#1E1B29]">Google Sign-in Required</h2>
@@ -272,7 +292,7 @@ export default function ProductPage() {
                       <input required value={formData.customerName} onChange={(e) => setFormData({...formData, customerName: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED]" placeholder="Your name" />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">Phone Number</label>
                         <input required value={formData.customerPhone} onChange={(e) => setFormData({...formData, customerPhone: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED]" placeholder="Phone number" />
