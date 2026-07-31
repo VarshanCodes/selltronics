@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import AdminNav from '@/app/components/AdminNav';
-import { db } from '@/firebase';
-import { addDoc, collection, getDocs, doc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { imageFileToDataUrl } from '@/utils/imageData';
 import AdminGate from '@/components/AdminGate';
 
@@ -28,11 +26,9 @@ export default function AdminProducts() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const snapshot = await getDocs(collection(db, 'products'));
-        const productsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        } as Product));
+        const response = await fetch('/api/admin/products', { cache: 'no-store' });
+        if (!response.ok) throw new Error((await response.json()).error || 'Unable to load products.');
+        const { products: productsData } = await response.json() as { products: Product[] };
         // Sort products by createdAt descending client-side
         productsData.sort((a, b) => {
           const tA = a.createdAt?.seconds || 0;
@@ -67,7 +63,8 @@ export default function AdminProducts() {
   const handleDelete = async (productId: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
       try {
-        await deleteDoc(doc(db, 'products', productId));
+        const response = await fetch(`/api/admin/products?id=${encodeURIComponent(productId)}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error((await response.json()).error || 'Unable to delete product.');
         setProducts(products.filter(p => p.id !== productId));
       } catch (error) {
         console.error('Error deleting product:', error);
@@ -84,10 +81,11 @@ export default function AdminProducts() {
           deviceName: formData.name, 
           category: formData.type, 
           deviceImageCode: formData.image, 
+          deviceImages: formData.image ? [formData.image] : [],
           status: 'Available',
-          updatedAt: serverTimestamp() 
         };
-        await updateDoc(doc(db, 'products', editingProduct.id), productData);
+        const response = await fetch('/api/admin/products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingProduct.id, ...productData }) });
+        if (!response.ok) throw new Error((await response.json()).error || 'Unable to update product.');
         // Optimistically update products list
         setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...formData, updatedAt: { seconds: Math.floor(Date.now() / 1000) } } : p));
       } catch (error) {
@@ -101,11 +99,12 @@ export default function AdminProducts() {
           deviceName: formData.name, 
           category: formData.type, 
           deviceImageCode: formData.image, 
+          deviceImages: formData.image ? [formData.image] : [],
           status: 'Available',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
         };
-        const created = await addDoc(collection(db, 'products'), productData);
+        const response = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(productData) });
+        if (!response.ok) throw new Error((await response.json()).error || 'Unable to publish product.');
+        const created = await response.json() as { id: string };
         setProducts((current) => [
           { id: created.id, ...formData, price: Number(formData.price), createdAt: { seconds: Math.floor(Date.now() / 1000) } },
           ...current

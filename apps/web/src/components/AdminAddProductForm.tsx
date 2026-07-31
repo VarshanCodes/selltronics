@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { db } from "@/firebase";
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
 
 interface Product {
   id: string;
@@ -39,11 +37,9 @@ export default function AdminAddProductForm() {
   // Fetch all products
   const fetchProducts = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'products'));
-      const list = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Product));
+      const response = await fetch('/api/admin/products', { cache: 'no-store' });
+      if (!response.ok) throw new Error((await response.json()).error || 'Unable to load products.');
+      const { products: list } = await response.json() as { products: Product[] };
       
       // Sort by createdAt descending client-side
       list.sort((a, b) => {
@@ -67,7 +63,8 @@ export default function AdminAddProductForm() {
     const files = e.target.files;
     if (files) {
       const remainingCount = 6 - images.length;
-      const filesToProcess = Array.from(files).slice(0, remainingCount);
+      const filesToProcess = Array.from(files).slice(0, remainingCount).filter((file) => file.size <= 120_000);
+      if (filesToProcess.length !== Math.min(files.length, remainingCount)) alert('Each image must be 120 KB or smaller so the product can be saved reliably.');
       
       filesToProcess.forEach(file => {
         const reader = new FileReader();
@@ -103,7 +100,8 @@ export default function AdminAddProductForm() {
   const handleDelete = async (productId: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
-      await deleteDoc(doc(db, 'products', productId));
+      const response = await fetch(`/api/admin/products?id=${encodeURIComponent(productId)}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error((await response.json()).error || 'Unable to delete product.');
       setProducts(prev => prev.filter(p => p.id !== productId));
       setSuccessMessage("Product deleted successfully.");
     } catch (err) {
@@ -143,19 +141,21 @@ export default function AdminAddProductForm() {
       deviceImageCode: images[0] || null, // First image for backwards compatibility
       deviceImages: images, // Store all images
       status: "Available",
-      updatedAt: serverTimestamp(),
     };
 
     try {
       if (editingId) {
-        await updateDoc(doc(db, 'products', editingId), productPayload);
+        const response = await fetch('/api/admin/products', {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingId, ...productPayload }),
+        });
+        if (!response.ok) throw new Error((await response.json()).error || 'Unable to update product.');
         setSuccessMessage(`${deviceName} has been updated successfully!`);
         setEditingId(null);
       } else {
-        await addDoc(collection(db, 'products'), {
-          ...productPayload,
-          createdAt: serverTimestamp(),
+        const response = await fetch('/api/admin/products', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(productPayload),
         });
+        if (!response.ok) throw new Error((await response.json()).error || 'Unable to publish product.');
         setSuccessMessage(`${deviceName} has been published successfully!`);
       }
       
