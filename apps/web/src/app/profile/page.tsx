@@ -72,7 +72,7 @@ export default function ProfilePage() {
           setDetails({ name: profile.name || user.displayName || '', phone: profile.phone || '', whatsappNumber: profile.whatsappNumber || '', address: profile.address || '' });
         }
         const sellQuery = query(
-          collection(db, 'sellRequests'),
+          collection(db, 'sell_requests'),
           where('userId', '==', user.uid)
         );
         const sellSnap = await getDocs(sellQuery);
@@ -114,7 +114,7 @@ export default function ProfilePage() {
       if (details.name && details.name !== user.displayName) await updateProfile(user, { displayName: details.name });
       await setDoc(doc(db, 'users', user.uid), { ...details, email: user.email || '', updatedAt: serverTimestamp() }, { merge: true });
       await Promise.all([
-        ...sellRequests.map((request) => updateDoc(doc(db, 'sellRequests', request.id), {
+        ...sellRequests.map((request) => updateDoc(doc(db, 'sell_requests', request.id), {
           userName: details.name, customerPhone: details.phone, whatsappNumber: details.whatsappNumber,
           locationAddress: details.address, customerEmail: user.email || '', updatedAt: serverTimestamp(),
         })),
@@ -127,11 +127,11 @@ export default function ProfilePage() {
     finally { setSavingProfile(false); }
   };
 
-  const cancelRequest = async (collectionName: 'sellRequests' | 'buyOrders', id: string) => {
+  const cancelRequest = async (collectionName: 'sell_requests' | 'buyOrders', id: string) => {
     if (!window.confirm('Cancel this request? It will remain visible as Cancelled so the Selltronics team can review it.')) return;
     try {
       await updateDoc(doc(db, collectionName, id), { status: 'Cancelled', cancelledAt: serverTimestamp(), updatedAt: serverTimestamp() });
-      if (collectionName === 'sellRequests') setSellRequests((items) => items.map((item) => item.id === id ? { ...item, status: 'Cancelled' } : item));
+      if (collectionName === 'sell_requests') setSellRequests((items) => items.map((item) => item.id === id ? { ...item, status: 'Cancelled' } : item));
       else setBuyOrders((items) => items.map((item) => item.id === id ? { ...item, status: 'Cancelled' } : item));
     } catch (error) { console.error('Could not cancel request', error); }
   };
@@ -237,7 +237,7 @@ export default function ProfilePage() {
                       Scheduled Days: <strong style={{ color: 'var(--violet-700)' }}>{req.days ? `${req.days}` : 'Listing in Progress'}</strong>
                     </div>
                   </div>
-                  <button type="button" onClick={() => cancelRequest('sellRequests', req.id)} className="btn-ghost" style={{ marginTop: '14px', padding: '7px 12px', borderColor: '#FEE2E2', color: '#991B1B' }}>Cancel sell request</button>
+                  <button type="button" onClick={() => cancelRequest('sell_requests', req.id)} className="btn-ghost" style={{ marginTop: '14px', padding: '7px 12px', borderColor: '#FEE2E2', color: '#991B1B' }}>Cancel sell request</button>
                 </div>
               ))}
             </div>

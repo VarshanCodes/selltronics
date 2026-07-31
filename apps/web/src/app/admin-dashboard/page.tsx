@@ -41,7 +41,7 @@ export default function AdminDashboard() {
       try {
         const [ordersSnapshot, sellReqSnapshot] = await Promise.all([
           getDocs(collection(db, 'buyOrders')),
-          getDocs(collection(db, 'sellRequests')),
+          getDocs(collection(db, 'sell_requests')),
         ]);
         const ordersData = ordersSnapshot.docs.map((item) => ({ id: item.id, ...item.data() } as Order));
         const sellReqData = sellReqSnapshot.docs.map((item) => ({ id: item.id, ...item.data() } as SellRequest));

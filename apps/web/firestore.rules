@@ -9,7 +9,7 @@ service cloud.firestore {
 
     // A signed-in customer can access only their own history. Administrative
     // actions are deliberately handled by the password-protected admin service.
-    match /sellRequests/{requestId} {
+    match /sell_requests/{requestId} {
       allow create: if request.auth != null
                     && request.resource.data.userId == request.auth.uid;
       allow read, update: if request.auth != null && resource.data.userId == request.auth.uid;

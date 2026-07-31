@@ -76,7 +76,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
     }
     const fetchRequests = async () => {
       try {
-        const q = query(collection(db, "sellRequests"), orderBy("submittedAt", "desc"));
+        const q = query(collection(db, "sell_requests"), orderBy("submittedAt", "desc"));
         const querySnapshot = await getDocs(q);
         const reqList: SellRequest[] = [];
         querySnapshot.forEach((doc) => {
@@ -134,7 +134,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
         expectedPrice: Number(editExpectedPrice),
         days: editDays,
       };
-      await updateDoc(doc(db, 'sellRequests', editing.id), payload);
+      await updateDoc(doc(db, 'sell_requests', editing.id), payload);
       alert('Seller details updated successfully!');
       window.location.reload();
     } catch (error) {
@@ -148,7 +148,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
   const handleDelete = async (requestId: string) => {
     if (!window.confirm("Are you sure you want to delete this sell request totally?")) return;
     try {
-      await deleteDoc(doc(db, 'sellRequests', requestId));
+      await deleteDoc(doc(db, 'sell_requests', requestId));
       alert('Sell request deleted successfully.');
       window.location.reload();
     } catch (error) {
@@ -161,7 +161,7 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
     if (!selected) return;
     setSaving(true);
     try {
-      await updateDoc(doc(db, 'sellRequests', selected.id), {
+      await updateDoc(doc(db, 'sell_requests', selected.id), {
         status,
         finalAmount: finalAmount ? Number(finalAmount) : null,
         paymentMethod,
