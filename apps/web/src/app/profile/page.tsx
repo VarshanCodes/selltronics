@@ -35,6 +35,7 @@ export default function ProfilePage() {
   const [dataLoading, setDataLoading] = useState(false);
   const [details, setDetails] = useState<ProfileDetails>({ name: '', phone: '', whatsappNumber: '', address: '' });
   const [savingProfile, setSavingProfile] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -63,45 +64,47 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user) return;
 
-    const fetchHistory = async () => {
-      setDataLoading(true);
-      try {
-        const profileSnap = await getDoc(doc(db, 'users', user.uid));
-        if (profileSnap.exists()) {
-          const profile = profileSnap.data();
-          setDetails({ name: profile.name || user.displayName || '', phone: profile.phone || '', whatsappNumber: profile.whatsappNumber || '', address: profile.address || '' });
+      const fetchHistory = async () => {
+        setDataLoading(true);
+        setError('');
+        try {
+          const profileSnap = await getDoc(doc(db, 'users', user.uid));
+          if (profileSnap.exists()) {
+            const profile = profileSnap.data();
+            setDetails({ name: profile.name || user.displayName || '', phone: profile.phone || '', whatsappNumber: profile.whatsappNumber || '', address: profile.address || '' });
+          }
+          const sellQuery = query(
+            collection(db, 'sell_requests'),
+            where('userId', '==', user.uid)
+          );
+          const sellSnap = await getDocs(sellQuery);
+          const sellList: SellRequest[] = [];
+          sellSnap.forEach((doc) => {
+            sellList.push({ id: doc.id, ...doc.data() } as SellRequest);
+          });
+          // Sort client-side if compound index is missing
+          sellList.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+          setSellRequests(sellList);
+  
+          // Query Buy Orders
+          const buyQuery = query(
+            collection(db, 'buyOrders'),
+            where('userId', '==', user.uid)
+          );
+          const buySnap = await getDocs(buyQuery);
+          const buyList: BuyOrder[] = [];
+          buySnap.forEach((doc) => {
+            buyList.push({ id: doc.id, ...doc.data() } as BuyOrder);
+          });
+          buyList.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+          setBuyOrders(buyList);
+        } catch (err) {
+          console.error("Error fetching history:", err);
+          setError(err instanceof Error ? err.message : String(err));
+        } finally {
+          setDataLoading(false);
         }
-        const sellQuery = query(
-          collection(db, 'sell_requests'),
-          where('userId', '==', user.uid)
-        );
-        const sellSnap = await getDocs(sellQuery);
-        const sellList: SellRequest[] = [];
-        sellSnap.forEach((doc) => {
-          sellList.push({ id: doc.id, ...doc.data() } as SellRequest);
-        });
-        // Sort client-side if compound index is missing
-        sellList.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-        setSellRequests(sellList);
-
-        // Query Buy Orders
-        const buyQuery = query(
-          collection(db, 'buyOrders'),
-          where('userId', '==', user.uid)
-        );
-        const buySnap = await getDocs(buyQuery);
-        const buyList: BuyOrder[] = [];
-        buySnap.forEach((doc) => {
-          buyList.push({ id: doc.id, ...doc.data() } as BuyOrder);
-        });
-        buyList.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-        setBuyOrders(buyList);
-      } catch (err) {
-        console.error("Error fetching history:", err);
-      } finally {
-        setDataLoading(false);
-      }
-    };
+      };
 
     fetchHistory();
   }, [user]);
@@ -186,6 +189,12 @@ export default function ProfilePage() {
           Sign Out
         </button>
       </div>
+      
+      {error && (
+        <div style={{ background: '#FEE2E2', border: '1px solid #EF4444', color: '#991B1B', padding: '16px', borderRadius: '16px', marginBottom: '25px', fontWeight: 600 }}>
+          {error}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '30px' }}>
         <section style={{ background: '#fff', border: '1px solid #EFE9FB', borderRadius: '24px', padding: '24px 30px' }}>

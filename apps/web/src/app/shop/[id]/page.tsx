@@ -228,44 +228,21 @@ export default function ProductPage() {
             )}
           </div>
 
-          {/* Right: Product Details */}
+          {/* Right: Product Details or Checkout Form */}
           <div className="w-full md:w-1/2 flex flex-col justify-center">
-            <div className="mb-2">
-              <span className="text-[0.8rem] font-bold text-[#7C3AED] uppercase tracking-wider bg-[#F3ECFF] px-3 py-1.5 rounded-lg">
-                {product.brand} {product.category}
-              </span>
-            </div>
-            
-            <h1 className="text-3xl md:text-4xl font-bold text-[#1E1B29] mt-4 mb-2 leading-tight">
-              {product.deviceName}
-            </h1>
-            <p className="text-[#6E6683] mb-6">{product.storage} • {product.specs}</p>
-
-            <div className="bg-[#FAF7FF] border border-[#E3D9F9] rounded-2xl p-4 sm:p-5 mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <h3 className="font-bold text-[#1E1B29] text-[0.9rem] uppercase tracking-wider text-gray-500">Price</h3>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-3xl font-black text-green-600">₹{product.price.toLocaleString()}</span>
-                    {product.originalPrice ? (
-                      <span className="text-sm text-red-500 line-through">₹{product.originalPrice.toLocaleString()}</span>
-                    ) : null}
-                  </div>
-                </div>
-                {!ordering && (
+            {ordering ? (
+              <div className="flex flex-col h-full justify-between">
+                <div className="flex justify-between items-center mb-6 border-b border-[#EFE9FB] pb-4">
                   <button
-                    type="button" 
-                    onClick={() => setOrdering(true)} 
-                    className="w-full sm:w-auto shrink-0 rounded-xl bg-[#5B21B6] px-6 py-3.5 font-bold text-white transition-all hover:bg-[#3D1E7A] active:scale-[0.98] cursor-pointer shadow-md"
+                    type="button"
+                    onClick={() => setOrdering(false)}
+                    className="text-[#7C3AED] hover:text-[#5B21B6] font-bold flex items-center gap-1 cursor-pointer transition-colors"
                   >
-                    Buy Device
+                    ← Back to Product Details
                   </button>
-                )}
-              </div>
-            </div>
+                  <span className="text-xs font-semibold text-[#6E6683]">Checkout</span>
+                </div>
 
-            {ordering && (
-              <div ref={orderDetailsRef} className="mt-4 scroll-mt-24 border-t border-[#EFE9FB] pt-6">
                 {!user ? (
                   <div className="rounded-2xl border border-[#E3D9F9] bg-[#FAF7FF] p-6 text-center">
                     <h2 className="text-lg font-bold text-[#1E1B29]">Google Sign-in Required</h2>
@@ -278,7 +255,6 @@ export default function ProductPage() {
                       <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12.2 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.5 1.8 15 1 12.2 1 7.4 1 3.4 3.8 1.6 7.8l3.7 2.9C6.2 7.4 9 5 12.2 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3h-11v4.4h6.3c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.6-5 3.6-8.7z"/><path fill="#FBBC05" d="M5.3 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.6 7.3C.6 9.2 0 11.3 0 13.5s.6 4.3 1.6 6.2l3.7-2.9z"/><path fill="#34A853" d="M12.2 19c-3.2 0-6-2.4-6.9-5.7L1.6 16.2C3.4 20.2 7.4 23 12.2 23c3 0 5.8-1 7.9-2.9l-3.7-2.9c-1.1.8-2.5 1.8-4.2 1.8z"/></svg>
                       Continue with Google
                     </button>
-                    <button type="button" onClick={() => setOrdering(false)} className="mt-4 text-sm font-semibold text-[#5B21B6] hover:underline cursor-pointer">Cancel</button>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmitOrder} className="space-y-4 bg-white border border-[#EFE9FB] p-6 rounded-2xl shadow-sm">
@@ -314,20 +290,51 @@ export default function ProductPage() {
                     </div>
 
                     <div className="flex gap-3 pt-2">
-                      <button type="button" onClick={() => setOrdering(false)} className="flex-1 rounded-xl border border-[#E3D9F9] py-3.5 font-bold text-[#1E1B29] transition-colors hover:bg-gray-50 cursor-pointer">
-                        Cancel
-                      </button>
-                      <button type="submit" disabled={submitting} className="flex-1 rounded-xl bg-[#5B21B6] py-3.5 font-bold text-white transition-colors hover:bg-[#3D1E7A] disabled:opacity-70 cursor-pointer">
-                        {submitting ? "Processing..." : "Proceed"}
+                      <button type="submit" disabled={submitting} className="w-full rounded-xl bg-[#5B21B6] py-3.5 font-bold text-white transition-colors hover:bg-[#3D1E7A] disabled:opacity-70 cursor-pointer">
+                        {submitting ? "Processing..." : "Place Order (COD)"}
                       </button>
                     </div>
                   </form>
                 )}
               </div>
+            ) : (
+              <>
+                <div className="mb-2">
+                  <span className="text-[0.8rem] font-bold text-[#7C3AED] uppercase tracking-wider bg-[#F3ECFF] px-3 py-1.5 rounded-lg">
+                    {product.brand} {product.category}
+                  </span>
+                </div>
+                
+                <h1 className="text-3xl md:text-4xl font-bold text-[#1E1B29] mt-4 mb-2 leading-tight">
+                  {product.deviceName}
+                </h1>
+                <p className="text-[#6E6683] mb-6">{product.storage} • {product.specs}</p>
+
+                <div className="bg-[#FAF7FF] border border-[#E3D9F9] rounded-2xl p-4 sm:p-5 mb-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <h3 className="font-bold text-[#1E1B29] text-[0.9rem] uppercase tracking-wider text-gray-500">Price</h3>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <span className="text-3xl font-black text-green-600">₹{product.price.toLocaleString()}</span>
+                        {product.originalPrice ? (
+                          <span className="text-sm text-red-500 line-through">₹{product.originalPrice.toLocaleString()}</span>
+                        ) : null}
+                      </div>
+                    </div>
+                    <button
+                      type="button" 
+                      onClick={() => setOrdering(true)} 
+                      className="w-full sm:w-auto shrink-0 rounded-xl bg-[#5B21B6] px-6 py-3.5 font-bold text-white transition-all hover:bg-[#3D1E7A] active:scale-[0.98] cursor-pointer shadow-md"
+                    >
+                      Buy Device
+                    </button>
+                  </div>
+                </div>
+                <p className="text-center text-[0.8rem] text-[#A79CBE]">
+                  Includes 6-month warranty and free shipping.
+                </p>
+              </>
             )}
-            <p className="mt-4 text-center text-[0.8rem] text-[#A79CBE]">
-              Includes 6-month warranty and free shipping.
-            </p>
           </div>
 
         </div>

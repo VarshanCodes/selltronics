@@ -50,8 +50,8 @@ export default function BottomMobileNav() {
   ];
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:hidden pointer-events-none">
-      <nav aria-label="Mobile navigation" className="pointer-events-auto mx-auto flex max-w-md items-end justify-between rounded-2xl border border-[#E9E0F8] bg-white/95 px-1.5 py-1.5 shadow-[0_10px_30px_rgba(49,24,92,0.16)] backdrop-blur-xl">
+    <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden pointer-events-none">
+      <nav aria-label="Mobile navigation" className="pointer-events-auto mx-auto flex max-w-sm items-end justify-around rounded-full border border-white/60 bg-white/80 px-2 py-1.5 shadow-[0_12px_40px_rgba(49,24,92,0.18)] backdrop-blur-xl">
         {items.map((item) => {
           const active = item.href === '/' ? pathname === '/' : pathname === item.href || pathname.startsWith(`${item.href}/`);
           if (item.isHighlight) {
@@ -60,12 +60,12 @@ export default function BottomMobileNav() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className="flex min-w-[58px] flex-col items-center justify-center -mt-7 transition-transform duration-200 active:scale-95"
+                className="flex min-w-[58px] flex-col items-center justify-center -mt-8 transition-transform duration-300 active:scale-90"
               >
-                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br from-[#4C1D95] to-[#8B5CF6] text-white flex items-center justify-center shadow-[0_8px_18px_rgba(91,33,182,0.35)] transition-all duration-200 ${active ? 'ring-4 ring-[#EDE9FE] -translate-y-0.5' : ''}`}>
+                <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-[#5B21B6] to-[#8B5CF6] text-white flex items-center justify-center shadow-[0_8px_20px_rgba(91,33,182,0.4)] transition-all duration-300 ${active ? 'ring-4 ring-[#EDE9FE] -translate-y-1' : 'hover:scale-105'}`}>
                   {item.icon(active)}
                 </div>
-                <span className={`text-[0.66rem] font-bold mt-1 ${active ? 'text-[#5B21B6]' : 'text-[#6E6683]'}`}>
+                <span className={`text-[0.66rem] font-bold mt-1 transition-colors duration-200 ${active ? 'text-[#5B21B6]' : 'text-[#6E6683]'}`}>
                   {item.label}
                 </span>
               </Link>
@@ -77,14 +77,19 @@ export default function BottomMobileNav() {
               key={item.href}
               href={item.href}
               aria-current={active ? 'page' : undefined}
-              className={`relative min-w-[58px] flex flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 px-2 transition-all duration-200 active:scale-95 ${
-                active ? 'bg-[#F3ECFF] text-[#5B21B6] font-bold' : 'text-[#6E6683]'
+              className={`relative min-w-[58px] flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 transition-all duration-300 active:scale-90 ${
+                active ? 'text-[#5B21B6] font-bold' : 'text-[#6E6683]'
               }`}
             >
-              {item.icon(active)}
-              <span className="text-[0.68rem] font-semibold leading-none">
+              <div className={`transition-transform duration-300 ${active ? 'scale-110 -translate-y-0.5' : ''}`}>
+                {item.icon(active)}
+              </div>
+              <span className="text-[0.66rem] font-bold leading-none mt-0.5">
                 {item.label}
               </span>
+              {active && (
+                <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-[#5B21B6] animate-ping" style={{ animationDuration: '2s' }} />
+              )}
             </Link>
           );
         })}
