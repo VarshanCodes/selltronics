@@ -389,52 +389,21 @@ export default function SellDeviceForm() {
     setError('');
     try {
       if (!auth.currentUser) throw new Error('Please sign in with Google before requesting a pickup.');
-
-      // Firestore rejects a document when any value is `undefined`.  Build the
-      // customer and request documents explicitly so optional form values can
-      // never make the entire pickup request fail.
-      const text = (value: unknown) => typeof value === 'string' ? value.trim() : '';
-      const conditionAnswers = Object.fromEntries(
-        Object.entries(form.conditionAnswers).filter(([, value]) => typeof value === 'string' && value.length > 0),
-      );
-      const customer = {
-        name: text(form.userName),
-        email: text(form.customerEmail),
-        phone: text(form.customerPhone),
-        whatsappNumber: text(form.whatsappNumber),
-        address: text(form.locationAddress),
-        city: text(form.locationCity),
-        state: text(form.locationState),
-        pincode: text(form.locationPincode),
-      };
-
       await setDoc(doc(db, 'users', auth.currentUser.uid), {
-        ...customer,
+        name: form.userName,
+        email: form.customerEmail,
+        phone: form.customerPhone,
+        whatsappNumber: form.whatsappNumber,
+        address: form.locationAddress,
+        city: form.locationCity,
+        state: form.locationState,
+        pincode: form.locationPincode,
         updatedAt: serverTimestamp(),
       }, { merge: true });
-
       const result = await addDoc(collection(db, 'sellRequests'), {
-        deviceType: text(form.deviceType),
-        brand: text(form.brand),
-        deviceName: text(form.deviceName),
-        storage: text(form.storage),
-        ram: text(form.ram),
-        specs: text(form.specs),
-        userName: customer.name,
-        customerPhone: customer.phone,
-        whatsappNumber: customer.whatsappNumber,
-        customerEmail: customer.email,
-        locationAddress: customer.address,
-        locationCity: customer.city,
-        locationState: customer.state,
-        locationPincode: customer.pincode,
-        conditionAnswers,
-        defects: form.defects.filter((value) => typeof value === 'string'),
-        problems: form.problems.filter((value) => typeof value === 'string'),
-        accessories: form.accessories.filter((value) => typeof value === 'string'),
-        images: form.images.filter((value) => typeof value === 'string'),
+        ...form,
         userId: auth.currentUser.uid,
-        expectedPrice: Number.isFinite(Number(form.expectedPrice)) ? Number(form.expectedPrice) : 0,
+        expectedPrice: Number(form.expectedPrice),
         status: 'pickup_requested',
         paymentStatus: 'pending_inspection',
         finalAmount: null,
@@ -444,7 +413,7 @@ export default function SellDeviceForm() {
       });
       setSuccessId(result.id);
     } catch (issue) {
-      console.error('Failed to submit sell request:', issue);
+      console.error(issue);
       setError('We could not submit your request. Please try again.');
     } finally {
       setLoading(false);
