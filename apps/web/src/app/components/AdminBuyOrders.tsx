@@ -41,7 +41,7 @@ export default function AdminBuyOrders() {
 
   const fetchOrders = async () => {
     try {
-      const q = query(collection(db, "buyOrders"), orderBy("createdAt", "desc"));
+      const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
       const querySnapshot = await getDocs(q);
       const ordersList: BuyOrder[] = [];
       querySnapshot.forEach((doc) => {
@@ -62,7 +62,7 @@ export default function AdminBuyOrders() {
   const handleDeleteOrder = async (orderId: string) => {
     if (!window.confirm("Are you sure you want to delete this order?")) return;
     try {
-      await deleteDoc(doc(db, "buyOrders", orderId));
+      await deleteDoc(doc(db, "orders", orderId));
       setOrders(prev => prev.filter(o => o.id !== orderId));
       alert("Order deleted successfully.");
     } catch (error) {
@@ -91,7 +91,7 @@ export default function AdminBuyOrders() {
 
     setSaving(true);
     try {
-      const orderRef = doc(db, "buyOrders", editingOrder.id);
+      const orderRef = doc(db, "orders", editingOrder.id);
       const payload = {
         customerName: editName,
         customerPhone: editPhone,
@@ -132,7 +132,7 @@ export default function AdminBuyOrders() {
 
     const status = type === 'success' ? 'YES CUSTOMER BUYED' : 'CUSTOMER NOT BUYED';
     try {
-      await updateDoc(doc(db, 'buyOrders', order.id), { status, updatedAt: new Date() });
+      await updateDoc(doc(db, 'orders', order.id), { status, updatedAt: new Date() });
       setOrders((current) => current.map((item) => item.id === order.id ? { ...item, status } : item));
     } catch (error) {
       console.error('Could not record order outcome', error);

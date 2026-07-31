@@ -110,16 +110,16 @@ export default function ProductPage() {
       } catch (profileError) {
         console.warn('Could not save the customer profile while ordering:', profileError);
       }
-      const orderRef = await addDoc(collection(db, "buyOrders"), {
-        productId: product.id,
-        deviceName: `${text(product.brand)} ${text(product.deviceName)}`.trim(),
+      const orderRef = await addDoc(collection(db, "orders"), {
+        productId: product.id || "",
+        deviceName: `${text(product.brand)} ${text(product.deviceName)}`.trim() || "",
         price: Number.isFinite(Number(product.price)) ? Number(product.price) : 0,
-        customerName: customer.name,
-        customerPhone: customer.phone,
-        whatsappNumber: customer.whatsappNumber,
-        customerEmail: customer.email,
-        deliveryAddress: customer.address,
-        userId: user.uid,
+        customerName: customer.name || "",
+        customerPhone: customer.phone || "",
+        whatsappNumber: customer.whatsappNumber || "",
+        customerEmail: customer.email || "",
+        deliveryAddress: customer.address || "",
+        userId: user.uid || "",
         status: "Pending Delivery",
         createdAt: serverTimestamp(),
       });

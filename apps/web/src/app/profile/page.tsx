@@ -68,36 +68,42 @@ export default function ProfilePage() {
         setDataLoading(true);
         setError('');
         try {
-          const profileSnap = await getDoc(doc(db, 'users', user.uid));
-          if (profileSnap.exists()) {
-            const profile = profileSnap.data();
+          const sellQuery = query(collection(db, 'sell_requests'), where('userId', '==', user.uid));
+          const buyQuery = query(collection(db, 'orders'), where('userId', '==', user.uid));
+          const [profileResult, sellResult, buyResult] = await Promise.allSettled([
+            getDoc(doc(db, 'users', user.uid)),
+            getDocs(sellQuery),
+            getDocs(buyQuery),
+          ]);
+
+          if (profileResult.status === 'fulfilled' && profileResult.value.exists()) {
+            const profile = profileResult.value.data();
             setDetails({ name: profile.name || user.displayName || '', phone: profile.phone || '', whatsappNumber: profile.whatsappNumber || '', address: profile.address || '' });
           }
-          const sellQuery = query(
-            collection(db, 'sell_requests'),
-            where('userId', '==', user.uid)
-          );
-          const sellSnap = await getDocs(sellQuery);
+
+          if (sellResult.status === 'fulfilled') {
           const sellList: SellRequest[] = [];
-          sellSnap.forEach((doc) => {
+          sellResult.value.forEach((doc) => {
             sellList.push({ id: doc.id, ...doc.data() } as SellRequest);
           });
-          // Sort client-side if compound index is missing
           sellList.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
           setSellRequests(sellList);
-  
-          // Query Buy Orders
-          const buyQuery = query(
-            collection(db, 'buyOrders'),
-            where('userId', '==', user.uid)
-          );
-          const buySnap = await getDocs(buyQuery);
+          }
+
+          if (buyResult.status === 'fulfilled') {
           const buyList: BuyOrder[] = [];
-          buySnap.forEach((doc) => {
+          buyResult.value.forEach((doc) => {
             buyList.push({ id: doc.id, ...doc.data() } as BuyOrder);
           });
           buyList.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
           setBuyOrders(buyList);
+          }
+
+          const failures = [profileResult, sellResult, buyResult].filter((result) => result.status === 'rejected');
+          if (failures.length) {
+            console.error('Some profile data could not be loaded:', failures);
+            setError('Some account data could not be loaded. Please refresh after the Firestore rules have been published.');
+          }
         } catch (err) {
           console.error("Error fetching history:", err);
           setError(err instanceof Error ? err.message : String(err));
@@ -121,7 +127,7 @@ export default function ProfilePage() {
           userName: details.name, customerPhone: details.phone, whatsappNumber: details.whatsappNumber,
           locationAddress: details.address, customerEmail: user.email || '', updatedAt: serverTimestamp(),
         })),
-        ...buyOrders.map((order) => updateDoc(doc(db, 'buyOrders', order.id), {
+        ...buyOrders.map((order) => updateDoc(doc(db, 'orders', order.id), {
           customerName: details.name, customerPhone: details.phone, whatsappNumber: details.whatsappNumber,
           deliveryAddress: details.address, customerEmail: user.email || '', updatedAt: serverTimestamp(),
         })),
@@ -130,7 +136,7 @@ export default function ProfilePage() {
     finally { setSavingProfile(false); }
   };
 
-  const cancelRequest = async (collectionName: 'sell_requests' | 'buyOrders', id: string) => {
+  const cancelRequest = async (collectionName: 'sell_requests' | 'orders', id: string) => {
     if (!window.confirm('Cancel this request? It will remain visible as Cancelled so the Selltronics team can review it.')) return;
     try {
       await updateDoc(doc(db, collectionName, id), { status: 'Cancelled', cancelledAt: serverTimestamp(), updatedAt: serverTimestamp() });
@@ -290,7 +296,7 @@ export default function ProfilePage() {
                       Delivery Status: <strong style={{ color: 'var(--violet-700)' }}>{order.days ? `${order.days}` : 'Listing in Progress'}</strong>
                     </div>
                   </div>
-                  <button type="button" onClick={() => cancelRequest('buyOrders', order.id)} className="btn-ghost" style={{ marginTop: '14px', padding: '7px 12px', borderColor: '#FEE2E2', color: '#991B1B' }}>Cancel COD order</button>
+                  <button type="button" onClick={() => cancelRequest('orders', order.id)} className="btn-ghost" style={{ marginTop: '14px', padding: '7px 12px', borderColor: '#FEE2E2', color: '#991B1B' }}>Cancel COD order</button>
                 </div>
               ))}
             </div>
