@@ -147,7 +147,7 @@ export default function ProductPage() {
           <p className="mt-3 text-[#6E6683]">Your order reference is below. Keep it safe for tracking.</p>
           <div className="mt-6 rounded-2xl bg-[#F3ECFF] p-4 font-mono text-lg font-semibold text-[#7C3AED]">{orderId}</div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link href={`/track-purchase?order=${orderId}`} className="rounded-xl bg-[#5B21B6] px-5 py-3 font-bold text-white hover:bg-[#6D28D9]">Track Order</Link>
+            <Link href={`/track-purchase?order=${orderId}`} className="rounded-xl bg-[#1E1B29] px-5 py-3 font-bold text-white">Track Order</Link>
             <Link href="/shop" className="rounded-xl border border-[#E3D9F9] px-5 py-3 font-bold text-[#1E1B29]">Back to Shop</Link>
           </div>
         </div>
