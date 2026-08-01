@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { imageFileToDataUrl } from '@/utils/imageData';
 
 interface Product {
   id: string;
@@ -69,24 +70,19 @@ export default function AdminAddProductForm() {
     fetchProducts();
   }, []);
 
-  // Convert uploaded images to Base64
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Resize normal camera images before persisting them in Firestore.
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      const remainingCount = 6 - images.length;
-      const filesToProcess = Array.from(files).slice(0, remainingCount).filter((file) => file.size <= 120_000);
-      if (filesToProcess.length !== Math.min(files.length, remainingCount)) alert('Each image must be 120 KB or smaller so the product can be saved reliably.');
-      
-      filesToProcess.forEach(file => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImages(prev => {
-            if (prev.length >= 6) return prev;
-            return [...prev, reader.result as string];
-          });
-        };
-        reader.readAsDataURL(file);
-      });
+    if (!files) return;
+    const filesToProcess = Array.from(files).slice(0, 6 - images.length);
+    setErrorMessage('');
+    try {
+      const compressed = await Promise.all(filesToProcess.map(imageFileToDataUrl));
+      setImages((current) => [...current, ...compressed].slice(0, 6));
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'The selected image could not be prepared.');
+    } finally {
+      e.target.value = '';
     }
   };
 
