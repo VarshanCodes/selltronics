@@ -7,7 +7,7 @@ import AdminStats from '@/app/components/AdminStats';
 import AdminOrdersTable from '@/app/components/AdminOrdersTable';
 import AdminSellRequests from '@/app/components/AdminSellRequests';
 import { db } from '@/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import AdminGate from '@/components/AdminGate';
 
 type DashboardStats = {
@@ -37,30 +37,10 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({ totalOrders: 0, totalRevenue: 0, pendingOrders: 0, completedOrders: 0 });
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [ordersSnapshot, sellReqSnapshot] = await Promise.all([
-          getDocs(collection(db, 'orders')),
-          getDocs(collection(db, 'sell_requests')),
-        ]);
-        const ordersData = ordersSnapshot.docs.map((item) => ({ id: item.id, ...item.data() } as Order));
-        const sellReqData = sellReqSnapshot.docs.map((item) => ({ id: item.id, ...item.data() } as SellRequest));
-
-        setOrders(ordersData);
-        setSellRequests(sellReqData);
-        setStats({
-          totalOrders: ordersData.length,
-          totalRevenue: ordersData.reduce((sum, order) => sum + Number(order.totalPrice || order.price || 0), 0),
-          pendingOrders: ordersData.filter((order) => ['pending', 'Pending Delivery', 'out_for_delivery'].includes(String(order.status))).length,
-          completedOrders: ordersData.filter((order) => ['completed', 'delivered'].includes(String(order.status))).length,
-        });
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    const updateStats = (ordersData: Order[]) => setStats({ totalOrders: ordersData.length, totalRevenue: ordersData.reduce((sum, order) => sum + Number(order.totalPrice || order.price || 0), 0), pendingOrders: ordersData.filter((order) => ['pending', 'Pending Delivery', 'out_for_delivery'].includes(String(order.status))).length, completedOrders: ordersData.filter((order) => ['completed', 'delivered'].includes(String(order.status))).length });
+    const stopOrders = onSnapshot(collection(db, 'orders'), (snapshot) => { const data = snapshot.docs.map((item) => ({ id: item.id, ...item.data() } as Order)); setOrders(data); updateStats(data); setLoading(false); }, (error) => { console.error('Error listening to orders:', error); setLoading(false); });
+    const stopSells = onSnapshot(collection(db, 'sell_requests'), (snapshot) => { setSellRequests(snapshot.docs.map((item) => ({ id: item.id, ...item.data() } as SellRequest))); setLoading(false); }, (error) => { console.error('Error listening to sell requests:', error); setLoading(false); });
+    return () => { stopOrders(); stopSells(); };
   }, []);
 
   const tabs = [

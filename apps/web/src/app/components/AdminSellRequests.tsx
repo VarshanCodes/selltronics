@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { doc, updateDoc, deleteDoc, collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '@/firebase';
 
 type SellRequest = { 
@@ -73,22 +73,10 @@ export default function AdminSellRequests({ requests: propRequests }: { requests
       setLoading(false);
       return;
     }
-    const fetchRequests = async () => {
-      try {
-        const q = query(collection(db, "sell_requests"), orderBy("submittedAt", "desc"));
-        const querySnapshot = await getDocs(q);
-        const reqList: SellRequest[] = [];
-        querySnapshot.forEach((doc) => {
-          reqList.push({ id: doc.id, ...doc.data() } as SellRequest);
-        });
-        setRequests(reqList);
-      } catch (error) {
-        console.error("Error fetching sell requests:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRequests();
+    return onSnapshot(query(collection(db, "sell_requests"), orderBy("submittedAt", "desc")), (snapshot) => {
+      setRequests(snapshot.docs.map((item) => ({ id: item.id, ...item.data() } as SellRequest)));
+      setLoading(false);
+    }, (error) => { console.error("Error fetching sell requests:", error); setLoading(false); });
   }, [propRequests]);
 
   const openReview = (request: SellRequest) => {

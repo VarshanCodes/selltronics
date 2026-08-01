@@ -32,13 +32,16 @@ export default function ProductPage() {
     customerPhone: "", 
     whatsappNumber: "", 
     customerEmail: "", 
-    deliveryAddress: "" 
+    deliveryAddress: "",
+    landmark: "",
+    pincode: "",
+    notes: ""
   });
   const [submitting, setSubmitting] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [ordering, setOrdering] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [signingIn, setSigningIn] = useState(false);
   const orderDetailsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => onAuthStateChanged(auth, (signedInUser) => {
@@ -48,13 +51,15 @@ export default function ProductPage() {
     getDoc(doc(db, 'users', signedInUser.uid)).then((snapshot) => {
       if (!snapshot.exists()) return;
       const details = snapshot.data();
-      setFormData((current) => ({ ...current, customerName: current.customerName || details.name || '', customerPhone: current.customerPhone || details.phone || '', whatsappNumber: current.whatsappNumber || details.whatsappNumber || '', customerEmail: current.customerEmail || details.email || signedInUser.email || '', deliveryAddress: current.deliveryAddress || [details.address, details.city, details.state, details.pincode].filter(Boolean).join(', ') }));
+      setFormData((current) => ({ ...current, customerName: current.customerName || details.name || '', customerPhone: current.customerPhone || details.phone || '', whatsappNumber: current.whatsappNumber || details.whatsappNumber || '', customerEmail: current.customerEmail || details.email || signedInUser.email || '', deliveryAddress: current.deliveryAddress || details.address || '', landmark: current.landmark || details.landmark || '', pincode: current.pincode || details.pincode || '' }));
     }).catch((error) => console.error('Could not load saved profile', error));
   }), []);
 
   const signInWithGoogle = async () => {
+    setSigningIn(true);
     try { await signInWithPopup(auth, new GoogleAuthProvider()); }
     catch (error) { console.error('Google sign-in failed:', error); alert('Google sign-in could not be completed. Please try again.'); }
+    finally { setSigningIn(false); }
   };
 
   useEffect(() => {
@@ -104,8 +109,10 @@ export default function ProductPage() {
       // not be lost if that optional profile update is unavailable.
       try {
         await setDoc(doc(db, 'users', user.uid), {
-          ...customer,
-          updatedAt: serverTimestamp(),
+        ...customer,
+        landmark: formData.landmark.trim(),
+        pincode: formData.pincode.trim(),
+        updatedAt: serverTimestamp(),
         }, { merge: true });
       } catch (profileError) {
         console.warn('Could not save the customer profile while ordering:', profileError);
@@ -119,12 +126,15 @@ export default function ProductPage() {
         whatsappNumber: customer.whatsappNumber || "",
         customerEmail: customer.email || "",
         deliveryAddress: customer.address || "",
+        landmark: formData.landmark.trim(),
+        pincode: formData.pincode.trim(),
+        notes: formData.notes.trim(),
         userId: user.uid || "",
         status: "Pending Delivery",
         createdAt: serverTimestamp(),
       });
 
-      setOrderId(orderRef.id);
+      router.push(`/order-success?order=${encodeURIComponent(orderRef.id)}`);
     } catch (error) {
       console.error("Error creating buy order:", error);
       alert("Unable to place order right now. Please try again.");
@@ -138,22 +148,6 @@ export default function ProductPage() {
   }
 
   if (!product) return null;
-
-  if (orderId) {
-    return (
-      <div className="min-h-screen bg-[#FAF7FF] flex items-center justify-center p-6">
-        <div className="w-full max-w-xl rounded-3xl border border-[#E3D9F9] bg-white p-8 text-center shadow-sm">
-          <h1 className="text-3xl font-black text-[#1E1B29]">Order placed successfully</h1>
-          <p className="mt-3 text-[#6E6683]">Your order reference is below. Keep it safe for tracking.</p>
-          <div className="mt-6 rounded-2xl bg-[#F3ECFF] p-4 font-mono text-lg font-semibold text-[#7C3AED]">{orderId}</div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link href={`/track-purchase?order=${orderId}`} className="rounded-xl bg-[#1E1B29] px-5 py-3 font-bold text-white">Track Order</Link>
-            <Link href="/shop" className="rounded-xl border border-[#E3D9F9] px-5 py-3 font-bold text-[#1E1B29]">Back to Shop</Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const imagesList = product.deviceImages && product.deviceImages.length > 0
     ? product.deviceImages
@@ -245,15 +239,17 @@ export default function ProductPage() {
 
                 {!user ? (
                   <div className="rounded-2xl border border-[#E3D9F9] bg-[#FAF7FF] p-6 text-center">
-                    <h2 className="text-lg font-bold text-[#1E1B29]">Google Sign-in Required</h2>
-                    <p className="mt-2 text-sm text-[#6E6683] mb-4">Please sign in to proceed with your address and contact details.</p>
+                    <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white font-black text-[#5B21B6] shadow-sm">G</div>
+                    <h2 className="mt-4 text-lg font-bold text-[#1E1B29]">Sign in to continue</h2>
+                    <p className="mt-2 text-sm text-[#6E6683] mb-4">Your Google account keeps this order request and its delivery updates secure.</p>
                     <button 
                       type="button" 
                       onClick={signInWithGoogle} 
+                      disabled={signingIn}
                       className="w-full rounded-xl border border-[#E3D9F9] bg-white py-3.5 font-bold text-[#1E1B29] hover:bg-[#F3ECFF] flex items-center justify-center gap-2 cursor-pointer transition-colors"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12.2 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.5 1.8 15 1 12.2 1 7.4 1 3.4 3.8 1.6 7.8l3.7 2.9C6.2 7.4 9 5 12.2 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3h-11v4.4h6.3c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.6-5 3.6-8.7z"/><path fill="#FBBC05" d="M5.3 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.6 7.3C.6 9.2 0 11.3 0 13.5s.6 4.3 1.6 6.2l3.7-2.9z"/><path fill="#34A853" d="M12.2 19c-3.2 0-6-2.4-6.9-5.7L1.6 16.2C3.4 20.2 7.4 23 12.2 23c3 0 5.8-1 7.9-2.9l-3.7-2.9c-1.1.8-2.5 1.8-4.2 1.8z"/></svg>
-                      Continue with Google
+                      {signingIn ? 'Signing in…' : 'Continue with Google'}
                     </button>
                   </div>
                 ) : (
@@ -280,14 +276,12 @@ export default function ProductPage() {
                     </div>
 
                     <div>
-                      <label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">Email Address</label>
-                      <input required type="email" value={formData.customerEmail} onChange={(e) => setFormData({...formData, customerEmail: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED]" placeholder="Email" />
+                      <label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">Delivery Address</label>
+                      <textarea required value={formData.deliveryAddress} onChange={(e) => setFormData({...formData, deliveryAddress: e.target.value})} className="min-h-24 w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED] resize-none" placeholder="House/flat, building name, street address" />
                     </div>
 
-                    <div>
-                      <label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">Delivery Address</label>
-                      <textarea required value={formData.deliveryAddress} onChange={(e) => setFormData({...formData, deliveryAddress: e.target.value})} className="min-h-24 w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED] resize-none" placeholder="House/flat, building name, street address, pincode" />
-                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">Landmark</label><input value={formData.landmark} onChange={(e) => setFormData({...formData, landmark: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED]" placeholder="Nearby landmark" /></div><div><label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">Pincode</label><input required value={formData.pincode} onChange={(e) => setFormData({...formData, pincode: e.target.value})} className="w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED]" placeholder="Pincode" /></div></div>
+                    <div><label className="block text-[0.8rem] font-bold text-[#1E1B29] mb-1.5">Notes <span className="font-normal text-[#6E6683]">(optional)</span></label><textarea value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} className="min-h-20 w-full rounded-xl border border-[#E3D9F9] px-4 py-3 outline-none focus:border-[#7C3AED] resize-none" placeholder="Anything that helps with delivery" /></div>
 
                     <div className="flex gap-3 pt-2">
                       <button type="submit" disabled={submitting} className="w-full rounded-xl bg-[#5B21B6] py-3.5 font-bold text-white transition-colors hover:bg-[#3D1E7A] disabled:opacity-70 cursor-pointer">

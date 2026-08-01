@@ -53,7 +53,7 @@ export default function AdminDashboardPage() {
         <div style={{ borderBottom: '1px solid #EFE9FB', marginBottom: '30px', marginTop: '30px' }}>
           <div style={{ display: 'flex', gap: '30px' }}>
             {[
-              { id: 'orders', label: 'Manage COD Deliveries' },
+              { id: 'orders', label: 'Manage Order Requests' },
               { id: 'add', label: 'Publish New Device' },
               { id: 'sellRequests', label: 'Evaluate User Devices' },
             ].map(tab => (

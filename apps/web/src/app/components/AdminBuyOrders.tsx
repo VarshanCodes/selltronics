@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
+import { collection, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../../config/firebase";
 
 interface BuyOrder {
@@ -39,24 +39,11 @@ export default function AdminBuyOrders() {
 
   const [saving, setSaving] = useState(false);
 
-  const fetchOrders = async () => {
-    try {
-      const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-      const querySnapshot = await getDocs(q);
-      const ordersList: BuyOrder[] = [];
-      querySnapshot.forEach((doc) => {
-        ordersList.push({ id: doc.id, ...doc.data() } as BuyOrder);
-      });
-      setOrders(ordersList);
-    } catch (error) {
-      console.error("Error fetching buy orders:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchOrders();
+    return onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc")), (snapshot) => {
+      setOrders(snapshot.docs.map((item) => ({ id: item.id, ...item.data() } as BuyOrder)));
+      setLoading(false);
+    }, (error) => { console.error("Error fetching order requests:", error); setLoading(false); });
   }, []);
 
   const handleDeleteOrder = async (orderId: string) => {
@@ -155,7 +142,7 @@ export default function AdminBuyOrders() {
   return (
     <div className="bg-white p-6 sm:p-10 rounded-3xl shadow-sm border-[1.5px] border-[#EFE9FB] w-full font-space">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-[#1E1B29]">Customer Purchases (COD)</h2>
+        <h2 className="text-2xl font-bold text-[#1E1B29]">Customer Order Requests</h2>
         <p className="text-[#6E6683] text-sm mt-1">Manage outbound deliveries, edit customer data, and send WhatsApp receipts.</p>
       </div>
 
