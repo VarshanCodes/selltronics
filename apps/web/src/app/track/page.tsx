@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
@@ -9,7 +9,7 @@ import { auth, db } from '@/config/firebase';
 
 type Request = { brand?: string; deviceName?: string; expectedPrice?: number; status?: string; locationAddress?: string };
 
-export default function TrackSellRequestPage() {
+function TrackSellRequestContent() {
   const searchParams = useSearchParams();
   const requestId = searchParams.get('order');
   const [user, setUser] = useState<User | null>(null);
@@ -33,4 +33,12 @@ export default function TrackSellRequestPage() {
     {request ? <div className="mt-6 space-y-4"><div className="rounded-2xl bg-[#F3ECFF] p-4"><p className="font-bold text-[#1E1B29]">{request.brand} {request.deviceName}</p><p className="mt-1 text-sm text-[#6E6683]">Request #{requestId}</p></div><div className="flex items-center justify-between border-b border-[#EFE9FB] pb-4"><span className="text-[#6E6683]">Status</span><strong className="rounded-full bg-[#FEF3C7] px-3 py-1 text-sm text-[#92400E]">{(request.status || 'Pickup requested').replaceAll('_', ' ')}</strong></div><p className="text-sm text-[#6E6683]">Pickup address: {request.locationAddress || 'Saved with your request'}</p></div> : <p className="mt-6 rounded-xl bg-[#FAF7FF] p-4 text-sm text-[#6E6683]">{message}</p>}
     <Link href="/profile" className="mt-6 inline-flex rounded-xl bg-[#5B21B6] px-4 py-3 font-bold text-white">View account history</Link>
   </section></main>;
+}
+
+export default function TrackSellRequestPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-[#FAF7FF] px-4 py-10 sm:py-16" />}>
+      <TrackSellRequestContent />
+    </Suspense>
+  );
 }
