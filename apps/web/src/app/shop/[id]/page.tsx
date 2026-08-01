@@ -147,7 +147,7 @@ export default function ProductPage() {
           <p className="mt-3 text-[#6E6683]">Your order reference is below. Keep it safe for tracking.</p>
           <div className="mt-6 rounded-2xl bg-[#F3ECFF] p-4 font-mono text-lg font-semibold text-[#7C3AED]">{orderId}</div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link href={`/track-purchase?order=${orderId}`} className="rounded-xl bg-[#1E1B29] px-5 py-3 font-bold text-white">Track Order</Link>
+            <Link href={`/track-purchase?order=${orderId}`} className="rounded-xl bg-[#5B21B6] px-5 py-3 font-bold text-white hover:bg-[#6D28D9]">Track Order</Link>
             <Link href="/shop" className="rounded-xl border border-[#E3D9F9] px-5 py-3 font-bold text-[#1E1B29]">Back to Shop</Link>
           </div>
         </div>
@@ -291,7 +291,7 @@ export default function ProductPage() {
 
                     <div className="flex gap-3 pt-2">
                       <button type="submit" disabled={submitting} className="w-full rounded-xl bg-[#5B21B6] py-3.5 font-bold text-white transition-colors hover:bg-[#3D1E7A] disabled:opacity-70 cursor-pointer">
-                        {submitting ? "Processing..." : "Place Order (COD)"}
+                        {submitting ? "Processing..." : "Place Order"}
                       </button>
                     </div>
                   </form>
