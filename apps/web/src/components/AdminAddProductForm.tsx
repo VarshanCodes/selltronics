@@ -32,7 +32,18 @@ export default function AdminAddProductForm() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const adminRequest = async (url: string, init?: RequestInit) => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 20_000);
+    try {
+      return await fetch(url, { ...init, signal: controller.signal });
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  };
 
   // Fetch all products
   const fetchProducts = async () => {
@@ -129,6 +140,7 @@ export default function AdminAddProductForm() {
 
     setIsSubmitting(true);
     setSuccessMessage("");
+    setErrorMessage("");
 
     const productPayload = {
       category,
@@ -145,14 +157,14 @@ export default function AdminAddProductForm() {
 
     try {
       if (editingId) {
-        const response = await fetch('/api/admin/products', {
+        const response = await adminRequest('/api/admin/products', {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingId, ...productPayload }),
         });
         if (!response.ok) throw new Error((await response.json()).error || 'Unable to update product.');
         setSuccessMessage(`${deviceName} has been updated successfully!`);
         setEditingId(null);
       } else {
-        const response = await fetch('/api/admin/products', {
+        const response = await adminRequest('/api/admin/products', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(productPayload),
         });
         if (!response.ok) throw new Error((await response.json()).error || 'Unable to publish product.');
@@ -170,7 +182,9 @@ export default function AdminAddProductForm() {
       fetchProducts();
     } catch (error) {
       console.error("Error saving product: ", error);
-      alert(error instanceof Error ? `Failed to save product: ${error.message}` : "Failed to save product.");
+      setErrorMessage(error instanceof DOMException && error.name === 'AbortError'
+        ? 'Saving timed out. Check that FIREBASE_SERVICE_ACCOUNT_JSON is configured in Vercel and try again.'
+        : error instanceof Error ? error.message : 'Failed to save product.');
     } finally {
       setIsSubmitting(false);
     }
@@ -191,6 +205,11 @@ export default function AdminAddProductForm() {
         {successMessage && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl font-semibold">
             {successMessage}
+          </div>
+        )}
+        {errorMessage && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl font-semibold">
+            {errorMessage}
           </div>
         )}
 

@@ -102,7 +102,7 @@ export default function ProfilePage() {
           const failures = [profileResult, sellResult, buyResult].filter((result) => result.status === 'rejected');
           if (failures.length) {
             console.error('Some profile data could not be loaded:', failures);
-            setError('Some account data could not be loaded. Please refresh after the Firestore rules have been published.');
+            setError('Your orders could not be loaded because Firestore denied this account request. Sign in with the Google account used for the order; if it still fails, the current Firestore rules must be published to Firebase.');
           }
         } catch (err) {
           console.error("Error fetching history:", err);
