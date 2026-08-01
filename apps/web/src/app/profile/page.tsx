@@ -68,6 +68,9 @@ export default function ProfilePage() {
         setDataLoading(true);
         setError('');
         try {
+          // Ensure Firestore receives a current credential before evaluating the
+          // owner-only rules for these queries.
+          await user.getIdToken();
           const sellQuery = query(collection(db, 'sell_requests'), where('userId', '==', user.uid));
           const buyQuery = query(collection(db, 'orders'), where('userId', '==', user.uid));
           const [profileResult, sellResult, buyResult] = await Promise.allSettled([
@@ -99,10 +102,12 @@ export default function ProfilePage() {
           setBuyOrders(buyList);
           }
 
-          const failures = [profileResult, sellResult, buyResult].filter((result) => result.status === 'rejected');
-          if (failures.length) {
-            console.error('Some profile data could not be loaded:', failures);
-            setError('Your orders could not be loaded because Firestore denied this account request. Sign in with the Google account used for the order; if it still fails, the current Firestore rules must be published to Firebase.');
+          const failedHistoryRequests = [sellResult, buyResult].filter((result) => result.status === 'rejected');
+          if (failedHistoryRequests.length) {
+            console.error('Could not load customer history:', failedHistoryRequests);
+            setError('We could not load your order history. Please sign out and sign in with the Google account used for the order, then try again.');
+          } else if (profileResult.status === 'rejected') {
+            console.error('Could not load customer profile:', profileResult.reason);
           }
         } catch (err) {
           console.error("Error fetching history:", err);

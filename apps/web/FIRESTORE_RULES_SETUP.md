@@ -1,12 +1,18 @@
 # Firestore permission setup
 
-The storefront reads only products whose `status` is `Available`. Deploy the
-rules in `firestore.rules` from the Firebase Console:
+The profile page reads `orders` and `sell_requests` using the signed-in
+customer's Firebase UID. The rules in this folder allow that owner-only access.
+They must be deployed to Firebase separately from a Vercel deployment.
 
-1. Open Firebase Console → **Firestore Database** → **Rules**.
-2. Replace the existing rules with the contents of `firestore.rules`.
-3. Click **Publish**.
+From `apps/web`, sign in once and publish the checked-in rules:
 
-These rules intentionally keep admin reads and edits private. Connect the
-admin dashboard to Firebase Authentication and custom claims before allowing
-admin operations from a browser.
+```sh
+npx firebase-tools@latest login
+npm run deploy:firestore-rules
+```
+
+This deploys `firestore.rules` to the `selltronics-74f3a` Firebase project.
+After it completes, sign out and back in on the website, then reopen Profile.
+
+The storefront reads only products whose `status` is `Available`. Administrative
+operations should use authenticated staff custom claims or a secure server endpoint.

@@ -41,5 +41,9 @@ yarn-error.log*
 node_modules
 .expo
 
+# The mobile app is maintained as a separate local repository; it is not a
+# submodule or part of the Vercel web deployment.
+apps/mobile/
+
 # Ignore all secret environment files
 .env*
