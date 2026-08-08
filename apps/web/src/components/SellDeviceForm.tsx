@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore';
 import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
+import { getLiveModelsAndPrices, getSingleModelPrice } from '@/app/actions/pricingEngine';
 
 type DeviceType = 'Smartphones' | 'Laptops' | 'Tablets' | 'Mac' | 'Other devices';
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 type Brand = { name: string; logo?: string; mark?: string };
 type CategoryCopy = {
   eyebrow: string;
@@ -366,6 +367,12 @@ export default function SellDeviceForm() {
   const [successId, setSuccessId] = useState<string | null>(null);
   const [showAllBrands, setShowAllBrands] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
+  // Pricing states
+  const [aiDeviceList, setAiDeviceList] = useState<{ model: string; basePrice: number }[]>([]);
+  const [customModelPrice, setCustomModelPrice] = useState<number | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
   const [form, setForm] = useState({
     deviceType: initialCategory,
     brand: '',
@@ -410,15 +417,222 @@ export default function SellDeviceForm() {
           userName: current.userName || user.displayName || '',
           customerEmail: current.customerEmail || user.email || '',
         }));
+        // Auto-skip Google verification page if authenticated
+        setStep((currentStep) => {
+          if (currentStep === 8) {
+            return 9;
+          }
+          return currentStep;
+        });
       }
     });
     return () => unsubscribe();
   }, []);
 
+  // Background fetch/cache list of popular models when brand/category selected
+  useEffect(() => {
+    if (form.brand && form.deviceType) {
+      const fetchModelsAndPrices = async () => {
+        try {
+          setIsAiLoading(true);
+          const cacheKey = `${form.deviceType}_${form.brand}`;
+          const cacheRef = doc(db, 'pricing_caches', cacheKey);
+          const cacheSnap = await getDoc(cacheRef);
+          
+          if (cacheSnap.exists()) {
+            const cacheData = cacheSnap.data();
+            const updatedAt = cacheData.updatedAt?.toDate() || new Date(0);
+            const now = new Date();
+            const diffDays = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24);
+            
+            if (diffDays < 7 && Array.isArray(cacheData.models) && cacheData.models.length > 0) {
+              setAiDeviceList(cacheData.models);
+              setIsAiLoading(false);
+              return;
+            }
+          }
+          
+          const data = await getLiveModelsAndPrices(form.deviceType, form.brand);
+          if (Array.isArray(data) && data.length > 0) {
+            setAiDeviceList(data);
+            await setDoc(cacheRef, {
+              models: data,
+              updatedAt: serverTimestamp()
+            });
+          }
+        } catch (err) {
+          console.error('Error fetching/caching models:', err);
+        } finally {
+          setIsAiLoading(false);
+        }
+      };
+      
+      fetchModelsAndPrices();
+    } else {
+      setAiDeviceList([]);
+    }
+  }, [form.brand, form.deviceType]);
+
+  // Debounced background fetch for custom typed models
+  useEffect(() => {
+    if (!form.deviceName || !form.brand || !form.deviceType) {
+      setCustomModelPrice(null);
+      return;
+    }
+    
+    const found = aiDeviceList.find(d => d.model.toLowerCase() === form.deviceName.toLowerCase());
+    if (found) {
+      setCustomModelPrice(null);
+      return;
+    }
+    
+    const timer = setTimeout(async () => {
+      try {
+        const cacheId = `${form.deviceType}_${form.brand}_${form.deviceName}`.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const cacheRef = doc(db, 'custom_device_prices', cacheId);
+        const cacheSnap = await getDoc(cacheRef);
+        
+        if (cacheSnap.exists()) {
+          const cacheData = cacheSnap.data();
+          const updatedAt = cacheData.updatedAt?.toDate() || new Date(0);
+          const now = new Date();
+          const diffDays = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24);
+          
+          if (diffDays < 7 && typeof cacheData.price === 'number') {
+            setCustomModelPrice(cacheData.price);
+            return;
+          }
+        }
+        
+        const price = await getSingleModelPrice(form.deviceType, form.brand, form.deviceName);
+        if (price > 0) {
+          setCustomModelPrice(price);
+          await setDoc(cacheRef, {
+            price,
+            updatedAt: serverTimestamp()
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching custom model price:', err);
+      }
+    }, 1200);
+    
+    return () => clearTimeout(timer);
+  }, [form.deviceName, form.brand, form.deviceType, aiDeviceList]);
+
+  // Pricing engine helpers
+  const getStorageMultiplier = (storageStr: string): number => {
+    if (!storageStr) return 1.0;
+    const clean = storageStr.replace(/\s+/g, '').toUpperCase();
+    if (clean.includes('32GB')) return 0.75;
+    if (clean.includes('64GB')) return 0.85;
+    if (clean.includes('128GB')) return 1.0;
+    if (clean.includes('256GB')) return 1.15;
+    if (clean.includes('512GB')) return 1.30;
+    if (clean.includes('1TB')) return 1.45;
+    if (clean.includes('2TB')) return 1.60;
+    return 1.0;
+  };
+
+  const getConditionMultiplier = (): { conditionName: string; multiplier: number } => {
+    const answers = form.conditionAnswers;
+    const isCriticalBroken = 
+      answers.powersOn === 'No' || 
+      answers.canMakeCalls === 'No' || 
+      answers.touchWorking === 'No' ||
+      answers.primaryFunctionWorking === 'No' ||
+      form.problems.includes('Power Button Not Working') ||
+      form.problems.includes('Battery Faulty');
+      
+    if (isCriticalBroken) {
+      return { conditionName: 'Broken', multiplier: 0.25 };
+    }
+    
+    const hasMajorDefect = 
+      form.defects.includes('Broken/scratch on device screen') ||
+      form.defects.includes('Dead spot/visible line and discoloration on screen');
+      
+    if (hasMajorDefect) {
+      return { conditionName: 'Fair', multiplier: 0.65 };
+    }
+    
+    const minorIssuesCount = form.defects.length + form.problems.length;
+    if (minorIssuesCount >= 3) {
+      return { conditionName: 'Fair', multiplier: 0.65 };
+    }
+    
+    if (minorIssuesCount > 0 || answers.screenOriginal === 'No') {
+      return { conditionName: 'Good', multiplier: 0.85 };
+    }
+    
+    return { conditionName: 'Flawless', multiplier: 1.0 };
+  };
+
+  const calculateEstimatedPriceRange = (): { min: number; max: number } => {
+    const activeDevice = aiDeviceList.find(d => d.model.toLowerCase() === form.deviceName.toLowerCase());
+    let basePrice = 0;
+    
+    if (activeDevice) {
+      basePrice = activeDevice.basePrice;
+    } else if (customModelPrice !== null) {
+      basePrice = customModelPrice;
+    } else {
+      if (aiDeviceList.length > 0) {
+        const sum = aiDeviceList.reduce((acc, curr) => acc + curr.basePrice, 0);
+        basePrice = Math.round(sum / aiDeviceList.length);
+      } else {
+        basePrice = 18000; // reasonable average base price in INR
+      }
+    }
+    
+    const condMultiplier = getConditionMultiplier().multiplier;
+    const storMultiplier = getStorageMultiplier(form.storage);
+    const exactValue = basePrice * condMultiplier * storMultiplier;
+    
+    return {
+      min: Math.floor(exactValue * 0.90),
+      max: Math.ceil(exactValue * 1.10)
+    };
+  };
+
+  const priceRange = calculateEstimatedPriceRange();
+
+  // Prefill expected price when entering final page
+  useEffect(() => {
+    if (step === 9 && !form.expectedPrice && priceRange.max > 0) {
+      const avgPrice = Math.round((priceRange.min + priceRange.max) / 2);
+      update('expectedPrice', avgPrice.toString());
+    }
+  }, [step, priceRange]);
+
   const update = (field: keyof typeof form, value: any) => setForm((current) => ({ ...current, [field]: value }));
   const toggle = (field: 'defects' | 'problems' | 'accessories', value: string) => setForm((current) => ({ ...current, [field]: current[field].includes(value) ? current[field].filter((item) => item !== value) : [...current[field], value] }));
-  const goBack = () => setStep((current) => Math.max(1, current - 1) as Step);
-  const goNext = () => setStep((current) => Math.min(7, current + 1) as Step);
+  
+  const goBack = () => {
+    setStep((current) => {
+      if (current === 9) {
+        if (currentUser) {
+          return 7; // Go straight back to estimate
+        } else {
+          return 8; // Back to google sign in
+        }
+      }
+      return Math.max(1, current - 1) as Step;
+    });
+  };
+  
+  const goNext = () => {
+    setStep((current) => {
+      if (current === 7) {
+        if (currentUser) {
+          return 9; // Skip Step 8 if already signed in
+        } else {
+          return 8;
+        }
+      }
+      return Math.min(9, current + 1) as Step;
+    });
+  };
 
   const canContinue =
     step === 1 ? Boolean(form.brand) :
@@ -557,8 +771,28 @@ export default function SellDeviceForm() {
   return <form onSubmit={submit} className="sell-form-card">
     <div className="sell-form-heading">
       <span className="eyebrow">{currentCopy.eyebrow}</span>
-      <h2>{step === 1 ? currentCopy.title : step === 2 ? 'Enter your device model.' : step === 3 ? 'Tell us more about your device.' : step === 4 ? 'Device condition and accessories.' : step === 5 ? 'Functional or Physical Problems' : step === 6 ? 'Upload device images.' : 'Your pickup details.'}</h2>
-      <p>{step === 1 ? currentCopy.description : step === 2 ? 'Choose the storage and RAM options for an accurate inspection quote.' : step === 3 ? 'These answers help us prepare an accurate inspection quote.' : step === 4 ? 'Select everything that applies. Final value is confirmed at pickup.' : step === 5 ? 'Please select all applicable issues to receive an accurate quote.' : step === 6 ? 'Show us your device condition by uploading up to 6 pictures.' : 'Sign in with Google if you want, then add expected price and location details.'}</p>
+      <h2>{
+        step === 1 ? currentCopy.title : 
+        step === 2 ? 'Enter your device model.' : 
+        step === 3 ? 'Tell us more about your device.' : 
+        step === 4 ? 'Device condition and accessories.' : 
+        step === 5 ? 'Functional or Physical Problems' : 
+        step === 6 ? 'Upload device images.' : 
+        step === 7 ? 'Estimated trade-in value.' : 
+        step === 8 ? 'Verify your identity.' : 
+        'Your pickup details.'
+      }</h2>
+      <p>{
+        step === 1 ? currentCopy.description : 
+        step === 2 ? 'Choose the storage and RAM options for an accurate inspection quote.' : 
+        step === 3 ? 'These answers help us prepare an accurate inspection quote.' : 
+        step === 4 ? 'Select everything that applies. Final value is confirmed at pickup.' : 
+        step === 5 ? 'Please select all applicable issues to receive an accurate quote.' : 
+        step === 6 ? 'Show us your device condition by uploading up to 6 pictures.' : 
+        step === 7 ? 'Here is the instant estimated quote for your device based on its condition.' : 
+        step === 8 ? 'Please sign in with Google to secure your pickup request.' : 
+        'Confirm your expected price and enter your location details.'
+      }</p>
     </div>
 
     {step === 1 && <div style={{ marginTop: 22 }}>
@@ -592,7 +826,24 @@ export default function SellDeviceForm() {
     </div>}
 
     {step === 2 && <div className="sell-form-grid">
-      <label className="field"><span>{currentCopy.modelLabel}</span><input required value={form.deviceName} onChange={(e) => update('deviceName', e.target.value)} placeholder={currentCopy.modelPlaceholder} /></label>
+      <label className="field">
+        <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {currentCopy.modelLabel}
+          {isAiLoading && <small style={{ color: 'var(--violet-700)', fontWeight: 600 }}>Preloading models...</small>}
+        </span>
+        <input 
+          list="ai-models" 
+          required 
+          value={form.deviceName} 
+          onChange={(e) => update('deviceName', e.target.value)} 
+          placeholder={currentCopy.modelPlaceholder} 
+        />
+        <datalist id="ai-models">
+          {aiDeviceList.map((device, idx) => (
+            <option key={idx} value={device.model} />
+          ))}
+        </datalist>
+      </label>
       <label className="field"><span>Storage</span><select required value={form.storage} onChange={(e) => update('storage', e.target.value)}><option value="">Choose storage</option>{currentCopy.storageOptions.map((option) => <option key={option}>{option}</option>)}</select></label>
       <label className="field"><span>RAM</span><select required value={form.ram} onChange={(e) => update('ram', e.target.value)}><option value="">Choose RAM</option>{currentCopy.ramOptions.map((option) => <option key={option}>{option}</option>)}</select></label>
       <label className="field"><span>{currentCopy.specLabel}</span><input value={form.specs} onChange={(e) => update('specs', e.target.value)} placeholder={currentCopy.specPlaceholder} /></label>
@@ -691,35 +942,85 @@ export default function SellDeviceForm() {
       </div>
     </div>}
 
-    {step === 7 && <div className="sell-form-grid">
-      {!currentUser ? (
-        <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', border: '1px solid #E3D9F9', borderRadius: '16px', background: '#FAF7FF', textAlign: 'center', gap: '16px' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1E1B29' }}>Please verify your identity to proceed</h3>
-          <p style={{ fontSize: '0.88rem', color: '#6E6683', maxWidth: '340px' }}>Sign in or Sign up with Google to secure your request and proceed with the pickup details.</p>
-          <button type="button" onClick={signInWithGoogle} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '12px 24px', cursor: 'pointer' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/></svg>
-            Sign in / Sign up with Google
-          </button>
+    {step === 7 && <div style={{ marginTop: 22 }}>
+      <div style={{ padding: '24px', background: 'var(--lavender-100)', borderRadius: '16px', border: '1.5px solid #E3D9F9', textAlign: 'center', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.05)' }}>
+        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--violet-700)', textTransform: 'uppercase', tracking: '0.1em', display: 'block', marginBottom: 12 }}>
+          LIVE ESTIMATED TRADE-IN VALUE
+        </span>
+        <h3 style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--ink)', margin: '8px 0 16px' }}>
+          Rs. {priceRange.min.toLocaleString()} - Rs. {priceRange.max.toLocaleString()}
+        </h3>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', margin: '20px 0', padding: '16px', background: '#fff', borderRadius: '12px', textAlign: 'left', fontSize: '0.9rem' }}>
+          <div>
+            <span style={{ display: 'block', color: '#6E6683', fontSize: '0.8rem' }}>Device</span>
+            <strong style={{ color: 'var(--ink)' }}>{form.brand} {form.deviceName}</strong>
+          </div>
+          <div>
+            <span style={{ display: 'block', color: '#6E6683', fontSize: '0.8rem' }}>Storage &amp; RAM</span>
+            <strong style={{ color: 'var(--ink)' }}>{form.storage} / {form.ram}</strong>
+          </div>
+          <div style={{ gridColumn: '1 / -1', borderTop: '1px solid #FAF7FF', paddingTop: '10px', marginTop: '4px' }}>
+            <span style={{ display: 'block', color: '#6E6683', fontSize: '0.8rem' }}>Evaluated Condition</span>
+            <strong style={{ color: 'var(--violet-700)' }}>{getConditionMultiplier().conditionName}</strong>
+          </div>
         </div>
-      ) : (
-        <>
-          <label className="field"><span>Expected price (Rs.)</span><input required type="number" min="0" value={form.expectedPrice} onChange={(e) => update('expectedPrice', e.target.value)} placeholder="e.g. 25000" /></label>
-          <label className="field"><span>Your name</span><input required value={form.userName} onChange={(e) => update('userName', e.target.value)} /></label>
-          <label className="field"><span>Phone number</span><input required type="tel" value={form.customerPhone} onChange={(e) => update('customerPhone', e.target.value)} placeholder="10-digit mobile number" /></label>
-          <label className="field"><span>WhatsApp number</span><input required type="tel" value={form.whatsappNumber} onChange={(e) => update('whatsappNumber', e.target.value)} placeholder="For pickup/status updates" /></label>
-          <label className="field"><span>Email</span><input required type="email" value={form.customerEmail} onChange={(e) => update('customerEmail', e.target.value)} /></label>
-          <label className="field"><span>Full address</span><input required value={form.locationAddress} onChange={(e) => update('locationAddress', e.target.value)} placeholder="House / flat, street, area" /></label>
-          <label className="field"><span>City</span><input required value={form.locationCity} onChange={(e) => update('locationCity', e.target.value)} /></label>
-          <label className="field"><span>State</span><input required value={form.locationState} onChange={(e) => update('locationState', e.target.value)} /></label>
-          <label className="field"><span>Pincode</span><input required value={form.locationPincode} onChange={(e) => update('locationPincode', e.target.value)} /></label>
-        </>
-      )}
+
+        <p style={{ fontSize: '0.78rem', color: '#6E6683', margin: '0 0 8px', lineHeight: 1.4 }}>
+          *This is a live estimate based on current market trends for a {form.brand} {form.deviceName} in {getConditionMultiplier().conditionName.toLowerCase()} condition. Final payout is verified in person upon doorstep inspection.
+        </p>
+      </div>
+    </div>}
+
+    {step === 8 && <div className="sell-form-grid">
+      <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', border: '1px solid #E3D9F9', borderRadius: '16px', background: '#FAF7FF', textAlign: 'center', gap: '16px' }}>
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1E1B29' }}>Please verify your identity to proceed</h3>
+        <p style={{ fontSize: '0.88rem', color: '#6E6683', maxWidth: '340px' }}>Sign in or Sign up with Google to secure your request and proceed with the pickup details.</p>
+        <button type="button" onClick={signInWithGoogle} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '12px 24px', cursor: 'pointer' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/></svg>
+          Sign in / Sign up with Google
+        </button>
+      </div>
+    </div>}
+
+    {step === 9 && <div className="sell-form-grid">
+      <label className="field"><span>Expected price (Rs.)</span><input required type="number" min="0" value={form.expectedPrice} onChange={(e) => update('expectedPrice', e.target.value)} placeholder="e.g. 25000" /></label>
+      <label className="field"><span>Your name</span><input required value={form.userName} onChange={(e) => update('userName', e.target.value)} /></label>
+      <label className="field"><span>Phone number</span><input required type="tel" value={form.customerPhone} onChange={(e) => update('customerPhone', e.target.value)} placeholder="10-digit mobile number" /></label>
+      <label className="field"><span>WhatsApp number</span><input required type="tel" value={form.whatsappNumber} onChange={(e) => update('whatsappNumber', e.target.value)} placeholder="For pickup/status updates" /></label>
+      <label className="field"><span>Email</span><input required type="email" value={form.customerEmail} onChange={(e) => update('customerEmail', e.target.value)} /></label>
+      <label className="field"><span>Full address</span><input required value={form.locationAddress} onChange={(e) => update('locationAddress', e.target.value)} placeholder="House / flat, street, area" /></label>
+      <label className="field"><span>City</span><input required value={form.locationCity} onChange={(e) => update('locationCity', e.target.value)} /></label>
+      <label className="field"><span>State</span><input required value={form.locationState} onChange={(e) => update('locationState', e.target.value)} /></label>
+      <label className="field"><span>Pincode</span><input required value={form.locationPincode} onChange={(e) => update('locationPincode', e.target.value)} /></label>
     </div>}
 
     {error && <p className="track-error">{error}</p>}
     <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
       {step > 1 && <button className="btn-ghost" type="button" onClick={goBack}>Back</button>}
-      {step < 7 ? (canContinue && <button className="btn-primary" type="button" onClick={goNext} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Continue <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>) : (currentUser && <button className="btn-primary sell-submit" disabled={loading} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>{loading ? 'Saving your request...' : <>Request pickup <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></>}</button>)}
+      {step < 9 ? (
+        canContinue && (
+          <button 
+            className="btn-primary" 
+            type="button" 
+            onClick={goNext} 
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            {step === 7 ? 'Proceed with Quote' : 'Continue'} 
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        )
+      ) : (
+        currentUser && (
+          <button 
+            className="btn-primary sell-submit" 
+            disabled={loading} 
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+          >
+            {loading ? 'Saving your request...' : <>Request pickup <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></>}
+          </button>
+        )
+      )}
     </div>
   </form>;
 }
