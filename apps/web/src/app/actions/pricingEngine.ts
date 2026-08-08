@@ -10,7 +10,7 @@ export async function getLiveModelsAndPrices(category: string, brand: string) {
   try {
     const prompt = `
       You are an API for an electronics trade-in platform.
-      Search the web for the 10-15 most popular and recent ${brand} ${category} models currently in the used market (released from 2015 to the current year).
+      Search the web for the 20-25 most popular and recent ${brand} ${category} models currently in the used market (released from 2015 to the current year, covering budget, mid-range, and flagship releases).
       Find their approximate average used market value in INR (Indian Rupees, e.g. 35000, 12000).
       
       Respond strictly with a raw JSON array of objects. Do not use markdown blocks, backticks, or extra text.

@@ -402,7 +402,151 @@ function getFallbackModels(category: string, brand: string): { model: string; ba
         { model: 'OnePlus 12R', basePrice: 38000 },
         { model: 'OnePlus 11', basePrice: 42000 },
         { model: 'OnePlus 10 Pro', basePrice: 30000 },
-        { model: 'OnePlus Nord 3', basePrice: 22000 }
+        { model: 'OnePlus Nord 3', basePrice: 22000 },
+        { model: 'OnePlus Nord CE 3 Lite', basePrice: 15000 }
+      ];
+    }
+    if (brandLower.includes('realme')) {
+      return [
+        { model: 'Realme GT5 Pro', basePrice: 45000 },
+        { model: 'Realme GT Neo 6', basePrice: 28000 },
+        { model: 'Realme P1 Pro 5G', basePrice: 20000 },
+        { model: 'Realme P1 5G', basePrice: 16000 },
+        { model: 'Realme 12 Pro+', basePrice: 26000 },
+        { model: 'Realme 12 Pro', basePrice: 22000 },
+        { model: 'Realme 11 Pro+', basePrice: 21000 },
+        { model: 'Realme 11 Pro', basePrice: 18000 },
+        { model: 'Realme 10 Pro+', basePrice: 15000 },
+        { model: 'Realme 9 Pro+', basePrice: 13000 },
+        { model: 'Realme 8 Pro', basePrice: 10000 },
+        { model: 'Realme 7 Pro', basePrice: 8500 },
+        { model: 'Realme C55', basePrice: 9000 },
+        { model: 'Realme Narzo 60 Pro', basePrice: 15000 }
+      ];
+    }
+    if (brandLower.includes('redmi') || brandLower.includes('xiaomi') || brandLower.includes('mi')) {
+      return [
+        { model: 'Xiaomi 14 Ultra', basePrice: 85000 },
+        { model: 'Xiaomi 14', basePrice: 55000 },
+        { model: 'Xiaomi 13 Pro', basePrice: 48000 },
+        { model: 'Redmi Note 13 Pro+ 5G', basePrice: 25000 },
+        { model: 'Redmi Note 13 Pro', basePrice: 21000 },
+        { model: 'Redmi Note 13', basePrice: 14000 },
+        { model: 'Redmi Note 12 Pro+ 5G', basePrice: 20000 },
+        { model: 'Redmi Note 12 Pro', basePrice: 17000 },
+        { model: 'Redmi Note 12', basePrice: 12000 },
+        { model: 'Redmi Note 11 Pro+', basePrice: 15000 },
+        { model: 'Redmi Note 10 Pro Max', basePrice: 11000 },
+        { model: 'Redmi Note 9 Pro', basePrice: 8000 }
+      ];
+    }
+    if (brandLower.includes('poco')) {
+      return [
+        { model: 'POCO X6 Pro 5G', basePrice: 22000 },
+        { model: 'POCO X6 5G', basePrice: 17000 },
+        { model: 'POCO F5 5G', basePrice: 24000 },
+        { model: 'POCO F4 5G', basePrice: 16000 },
+        { model: 'POCO X5 Pro 5G', basePrice: 15000 },
+        { model: 'POCO X4 Pro 5G', basePrice: 12000 },
+        { model: 'POCO M6 Pro 5G', basePrice: 10000 }
+      ];
+    }
+    if (brandLower.includes('vivo')) {
+      return [
+        { model: 'Vivo X100 Pro', basePrice: 72000 },
+        { model: 'Vivo X100', basePrice: 54000 },
+        { model: 'Vivo V30 Pro', basePrice: 36000 },
+        { model: 'Vivo V30', basePrice: 28000 },
+        { model: 'Vivo V29 Pro', basePrice: 27000 },
+        { model: 'Vivo V27 Pro', basePrice: 22000 },
+        { model: 'Vivo T2x 5G', basePrice: 10000 },
+        { model: 'Vivo Y200 5G', basePrice: 15000 }
+      ];
+    }
+    if (brandLower.includes('oppo')) {
+      return [
+        { model: 'Oppo Find X7 Ultra', basePrice: 65000 },
+        { model: 'Oppo Reno 11 Pro 5G', basePrice: 32000 },
+        { model: 'Oppo Reno 11 5G', basePrice: 25000 },
+        { model: 'Oppo Reno 10 Pro+', basePrice: 35000 },
+        { model: 'Oppo Reno 8 Pro 5G', basePrice: 20000 },
+        { model: 'Oppo F25 Pro 5G', basePrice: 19000 },
+        { model: 'Oppo F23 5G', basePrice: 15000 },
+        { model: 'Oppo A78 5G', basePrice: 13000 }
+      ];
+    }
+    if (brandLower.includes('motorola')) {
+      return [
+        { model: 'Motorola Edge 50 Ultra', basePrice: 50000 },
+        { model: 'Motorola Edge 50 Pro', basePrice: 28000 },
+        { model: 'Motorola Edge 40', basePrice: 20000 },
+        { model: 'Motorola Edge 40 Neo', basePrice: 17000 },
+        { model: 'Moto G84 5G', basePrice: 14000 },
+        { model: 'Moto G54 5G', basePrice: 11000 },
+        { model: 'Motorola Razr 40 Ultra', basePrice: 48000 }
+      ];
+    }
+    if (brandLower.includes('nothing')) {
+      return [
+        { model: 'Nothing Phone (2)', basePrice: 32000 },
+        { model: 'Nothing Phone (2a)', basePrice: 20000 },
+        { model: 'Nothing Phone (1)', basePrice: 18000 }
+      ];
+    }
+    if (brandLower.includes('iqoo')) {
+      return [
+        { model: 'iQOO 12 5G', basePrice: 46000 },
+        { model: 'iQOO Neo 9 Pro', basePrice: 30000 },
+        { model: 'iQOO Z9 5G', basePrice: 16000 },
+        { model: 'iQOO Neo 7 Pro', basePrice: 24000 },
+        { model: 'iQOO 11 5G', basePrice: 35000 },
+        { model: 'iQOO 9 Pro 5G', basePrice: 25000 }
+      ];
+    }
+    if (brandLower.includes('infinix')) {
+      return [
+        { model: 'Infinix GT 10 Pro', basePrice: 15000 },
+        { model: 'Infinix Note 30 5G', basePrice: 11000 },
+        { model: 'Infinix Zero 30 5G', basePrice: 16000 },
+        { model: 'Infinix Note 40 Pro 5G', basePrice: 17000 }
+      ];
+    }
+    if (brandLower.includes('tecno')) {
+      return [
+        { model: 'Tecno Camon 30 Pro 5G', basePrice: 18000 },
+        { model: 'Tecno Pova 6 Pro 5G', basePrice: 15000 },
+        { model: 'Tecno Phantom V Fold', basePrice: 45000 },
+        { model: 'Tecno Camon 20 Premier 5G', basePrice: 19000 }
+      ];
+    }
+    if (brandLower.includes('honor')) {
+      return [
+        { model: 'Honor 90 5G', basePrice: 22000 },
+        { model: 'Honor X9b 5G', basePrice: 18000 },
+        { model: 'Honor 70 5G', basePrice: 15000 }
+      ];
+    }
+    if (brandLower.includes('nokia')) {
+      return [
+        { model: 'Nokia XR21', basePrice: 24000 },
+        { model: 'Nokia X30 5G', basePrice: 20000 },
+        { model: 'Nokia G42 5G', basePrice: 9000 },
+        { model: 'Nokia 6.1 Plus', basePrice: 5000 },
+        { model: 'Nokia 8.1', basePrice: 7000 }
+      ];
+    }
+    if (brandLower.includes('sony')) {
+      return [
+        { model: 'Xperia 1 V', basePrice: 58000 },
+        { model: 'Xperia 5 V', basePrice: 45000 },
+        { model: 'Xperia 10 V', basePrice: 22000 }
+      ];
+    }
+    if (brandLower.includes('asus')) {
+      return [
+        { model: 'ROG Phone 8 Pro', basePrice: 75000 },
+        { model: 'ROG Phone 7 Ultimate', basePrice: 58000 },
+        { model: 'Zenfone 10', basePrice: 38000 }
       ];
     }
   }
