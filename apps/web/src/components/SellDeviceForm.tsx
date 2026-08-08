@@ -356,6 +356,145 @@ function sanitizeValue(value: any): any {
   return value;
 }
 
+function getFallbackModels(category: string, brand: string): { model: string; basePrice: number }[] {
+  const brandLower = brand.toLowerCase();
+  const catLower = category.toLowerCase();
+  
+  if (catLower.includes('phone') || catLower.includes('smart') || catLower.includes('mobile')) {
+    if (brandLower.includes('apple')) {
+      return [
+        { model: 'iPhone 15 Pro Max', basePrice: 85000 },
+        { model: 'iPhone 15 Pro', basePrice: 75000 },
+        { model: 'iPhone 15', basePrice: 58000 },
+        { model: 'iPhone 14 Pro Max', basePrice: 68000 },
+        { model: 'iPhone 14 Pro', basePrice: 60000 },
+        { model: 'iPhone 14', basePrice: 48000 },
+        { model: 'iPhone 13 Pro Max', basePrice: 52000 },
+        { model: 'iPhone 13', basePrice: 38000 },
+        { model: 'iPhone 12', basePrice: 28000 },
+        { model: 'iPhone 11', basePrice: 20000 }
+      ];
+    }
+    if (brandLower.includes('samsung')) {
+      return [
+        { model: 'Galaxy S24 Ultra', basePrice: 90000 },
+        { model: 'Galaxy S24+', basePrice: 65000 },
+        { model: 'Galaxy S24', basePrice: 55000 },
+        { model: 'Galaxy S23 Ultra', basePrice: 70000 },
+        { model: 'Galaxy S23', basePrice: 45000 },
+        { model: 'Galaxy S22 Ultra', basePrice: 48000 },
+        { model: 'Galaxy A54', basePrice: 22000 },
+        { model: 'Galaxy M54', basePrice: 18000 }
+      ];
+    }
+    if (brandLower.includes('google')) {
+      return [
+        { model: 'Pixel 8 Pro', basePrice: 68000 },
+        { model: 'Pixel 8', basePrice: 48000 },
+        { model: 'Pixel 7 Pro', basePrice: 45000 },
+        { model: 'Pixel 7', basePrice: 32000 },
+        { model: 'Pixel 6a', basePrice: 20000 }
+      ];
+    }
+    if (brandLower.includes('oneplus')) {
+      return [
+        { model: 'OnePlus 12', basePrice: 58000 },
+        { model: 'OnePlus 12R', basePrice: 38000 },
+        { model: 'OnePlus 11', basePrice: 42000 },
+        { model: 'OnePlus 10 Pro', basePrice: 30000 },
+        { model: 'OnePlus Nord 3', basePrice: 22000 }
+      ];
+    }
+  }
+  
+  if (catLower.includes('laptop')) {
+    if (brandLower.includes('apple')) {
+      return [
+        { model: 'MacBook Pro M3 Max', basePrice: 220000 },
+        { model: 'MacBook Pro M3 Pro', basePrice: 160000 },
+        { model: 'MacBook Pro M3', basePrice: 120000 },
+        { model: 'MacBook Air M3', basePrice: 95000 },
+        { model: 'MacBook Air M2', basePrice: 78000 },
+        { model: 'MacBook Air M1', basePrice: 55000 }
+      ];
+    }
+    if (brandLower.includes('dell')) {
+      return [
+        { model: 'XPS 15 9530', basePrice: 110000 },
+        { model: 'XPS 13 9320', basePrice: 85000 },
+        { model: 'Inspiron 15', basePrice: 35000 },
+        { model: 'Latitude 5440', basePrice: 45000 }
+      ];
+    }
+    if (brandLower.includes('hp')) {
+      return [
+        { model: 'Spectre x360', basePrice: 95000 },
+        { model: 'Envy 13', basePrice: 55000 },
+        { model: 'Pavilion 15', basePrice: 38000 },
+        { model: 'EliteBook 840', basePrice: 50000 }
+      ];
+    }
+    if (brandLower.includes('lenovo')) {
+      return [
+        { model: 'ThinkPad X1 Carbon', basePrice: 125000 },
+        { model: 'Yoga 9i', basePrice: 90000 },
+        { model: 'IdeaPad 3', basePrice: 30000 },
+        { model: 'Legion 5', basePrice: 65000 }
+      ];
+    }
+  }
+  
+  if (catLower.includes('mac')) {
+    if (brandLower.toLowerCase().includes('air')) {
+      return [
+        { model: 'MacBook Air M3 (2024)', basePrice: 95000 },
+        { model: 'MacBook Air M2 (2022)', basePrice: 78000 },
+        { model: 'MacBook Air M1 (2020)', basePrice: 55000 }
+      ];
+    }
+    if (brandLower.toLowerCase().includes('pro')) {
+      return [
+        { model: 'MacBook Pro M3 Max (2023)', basePrice: 220000 },
+        { model: 'MacBook Pro M3 Pro (2023)', basePrice: 160000 },
+        { model: 'MacBook Pro M3 (2023)', basePrice: 120000 },
+        { model: 'MacBook Pro M2 (2023)', basePrice: 105000 },
+        { model: 'MacBook Pro M1 (2021)', basePrice: 85000 }
+      ];
+    }
+    return [
+      { model: 'iMac M3', basePrice: 110000 },
+      { model: 'Mac mini M2', basePrice: 45000 },
+      { model: 'Mac Studio M2 Max', basePrice: 160000 }
+    ];
+  }
+
+  if (catLower.includes('tablet')) {
+    if (brandLower.includes('apple')) {
+      return [
+        { model: 'iPad Pro M2', basePrice: 72000 },
+        { model: 'iPad Air 5th Gen', basePrice: 48000 },
+        { model: 'iPad 10th Gen', basePrice: 32000 },
+        { model: 'iPad mini 6', basePrice: 38000 }
+      ];
+    }
+    if (brandLower.includes('samsung')) {
+      return [
+        { model: 'Galaxy Tab S9 Ultra', basePrice: 75000 },
+        { model: 'Galaxy Tab S9', basePrice: 52000 },
+        { model: 'Galaxy Tab S8', basePrice: 38000 },
+        { model: 'Galaxy Tab A9+', basePrice: 15000 }
+      ];
+    }
+  }
+  
+  // Generic fallback if not matched
+  return [
+    { model: `${brand} Model A`, basePrice: 25000 },
+    { model: `${brand} Model B`, basePrice: 18000 },
+    { model: `${brand} Model C`, basePrice: 12000 }
+  ];
+}
+
 export default function SellDeviceForm() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get('category');
@@ -372,6 +511,7 @@ export default function SellDeviceForm() {
   const [aiDeviceList, setAiDeviceList] = useState<{ model: string; basePrice: number }[]>([]);
   const [customModelPrice, setCustomModelPrice] = useState<number | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const [form, setForm] = useState({
     deviceType: initialCategory,
@@ -826,24 +966,93 @@ export default function SellDeviceForm() {
     </div>}
 
     {step === 2 && <div className="sell-form-grid">
-      <label className="field">
-        <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="field" style={{ position: 'relative' }}>
+        <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink)' }}>
           {currentCopy.modelLabel}
           {isAiLoading && <small style={{ color: 'var(--violet-700)', fontWeight: 600 }}>Preloading models...</small>}
         </span>
-        <input 
-          list="ai-models" 
-          required 
-          value={form.deviceName} 
-          onChange={(e) => update('deviceName', e.target.value)} 
-          placeholder={currentCopy.modelPlaceholder} 
-        />
-        <datalist id="ai-models">
-          {aiDeviceList.map((device, idx) => (
-            <option key={idx} value={device.model} />
-          ))}
-        </datalist>
-      </label>
+        <div style={{ position: 'relative', marginTop: '8px' }}>
+          <input 
+            required 
+            value={form.deviceName} 
+            onChange={(e) => {
+              update('deviceName', e.target.value);
+              setShowDropdown(true);
+            }} 
+            onFocus={() => setShowDropdown(true)}
+            onBlur={() => {
+              setTimeout(() => setShowDropdown(false), 200);
+            }}
+            placeholder={currentCopy.modelPlaceholder} 
+            style={{ width: '100%' }}
+          />
+          {showDropdown && (
+            <ul style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              zIndex: 1000,
+              background: '#fff',
+              border: '1.5px solid #E3D9F9',
+              borderRadius: '12px',
+              maxHeight: '220px',
+              overflowY: 'auto',
+              margin: '4px 0 0 0',
+              padding: '6px 0',
+              listStyle: 'none',
+              boxShadow: '0 8px 24px rgba(99, 102, 241, 0.1)'
+            }}>
+              {(() => {
+                const displayModels = aiDeviceList.length > 0 ? aiDeviceList : getFallbackModels(form.deviceType, form.brand);
+                const filtered = displayModels.filter(item => 
+                  item.model.toLowerCase().includes(form.deviceName.toLowerCase())
+                );
+                
+                if (filtered.length === 0) {
+                  return (
+                    <li style={{ padding: '10px 16px', fontSize: '0.88rem', color: '#6E6683', fontStyle: 'italic' }}>
+                      No matching models. Press tab/continue to use your typed model.
+                    </li>
+                  );
+                }
+
+                return filtered.map((item, idx) => (
+                  <li 
+                    key={idx}
+                    onMouseDown={() => {
+                      update('deviceName', item.model);
+                      setShowDropdown(false);
+                    }}
+                    style={{
+                      padding: '10px 16px',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      color: 'var(--ink)',
+                      fontWeight: 500,
+                      borderBottom: idx < filtered.length - 1 ? '1px solid #FAF7FF' : 'none',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'var(--lavender-100)';
+                      e.currentTarget.style.color = 'var(--violet-700)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'var(--ink)';
+                    }}
+                  >
+                    <span>{item.model}</span>
+                    <small style={{ color: '#9CA3AF', fontSize: '0.75rem' }}>Popular suggestion</small>
+                  </li>
+                ));
+              })()}
+            </ul>
+          )}
+        </div>
+      </div>
       <label className="field"><span>Storage</span><select required value={form.storage} onChange={(e) => update('storage', e.target.value)}><option value="">Choose storage</option>{currentCopy.storageOptions.map((option) => <option key={option}>{option}</option>)}</select></label>
       <label className="field"><span>RAM</span><select required value={form.ram} onChange={(e) => update('ram', e.target.value)}><option value="">Choose RAM</option>{currentCopy.ramOptions.map((option) => <option key={option}>{option}</option>)}</select></label>
       <label className="field"><span>{currentCopy.specLabel}</span><input value={form.specs} onChange={(e) => update('specs', e.target.value)} placeholder={currentCopy.specPlaceholder} /></label>
