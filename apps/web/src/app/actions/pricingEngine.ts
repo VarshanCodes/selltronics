@@ -25,10 +25,12 @@ export async function getLiveModelsAndPrices(category: string, brand: string) {
     const response = await ai.models.generateContent({
       model: 'gemini-1.5-flash',
       contents: prompt,
-      tools: [{ googleSearch: {} }], 
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
     });
 
-    let rawText = response.text.trim();
+    let rawText = response.text?.trim() || "";
     
     // Clean up any accidental markdown formatting from the AI
     if (rawText.startsWith("```json")) {
@@ -62,10 +64,12 @@ export async function getSingleModelPrice(category: string, brand: string, model
     const response = await ai.models.generateContent({
       model: 'gemini-1.5-flash',
       contents: prompt,
-      tools: [{ googleSearch: {} }],
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
     });
 
-    let rawText = response.text.trim();
+    let rawText = response.text?.trim() || "";
     if (rawText.startsWith("```json")) {
       rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
     } else if (rawText.startsWith("```")) {

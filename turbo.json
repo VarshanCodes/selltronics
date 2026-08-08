@@ -1,6 +1,10 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "FIREBASE_SERVICE_ACCOUNT_JSON",
+    "GEMINI_API_KEY"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

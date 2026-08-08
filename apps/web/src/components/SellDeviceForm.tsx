@@ -944,7 +944,7 @@ export default function SellDeviceForm() {
 
     {step === 7 && <div style={{ marginTop: 22 }}>
       <div style={{ padding: '24px', background: 'var(--lavender-100)', borderRadius: '16px', border: '1.5px solid #E3D9F9', textAlign: 'center', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.05)' }}>
-        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--violet-700)', textTransform: 'uppercase', tracking: '0.1em', display: 'block', marginBottom: 12 }}>
+        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--violet-700)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 12 }}>
           LIVE ESTIMATED TRADE-IN VALUE
         </span>
         <h3 style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--ink)', margin: '8px 0 16px' }}>
