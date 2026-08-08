@@ -8,9 +8,11 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export async function getLiveModelsAndPrices(category: string, brand: string) {
   try {
+    const currentYear = new Date().getFullYear();
     const prompt = `
       You are an API for an electronics trade-in platform.
-      Search the web for the 20-25 most popular and recent ${brand} ${category} models currently in the used market (released from 2015 to the current year, covering budget, mid-range, and flagship releases).
+      Search the web for the 20-25 most popular and recent ${brand} ${category} models currently in the used market.
+      The current year is ${currentYear}. Make sure to search for and include the absolute latest and most recent releases up to ${currentYear} (e.g. for Apple, search for and include iPhone 16, iPhone 16 Pro, iPhone 17, iPhone 17 Pro series; for Samsung, include Galaxy S25, Galaxy S26 series; for Google, include Pixel 9, Pixel 10 series; for Mac, include M4 chip models, etc., depending on the brand/category, as well as previous models back to 2015).
       Find their approximate average used market value in INR (Indian Rupees, e.g. 35000, 12000).
       
       Respond strictly with a raw JSON array of objects. Do not use markdown blocks, backticks, or extra text.

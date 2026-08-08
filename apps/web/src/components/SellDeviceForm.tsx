@@ -363,6 +363,13 @@ function getFallbackModels(category: string, brand: string): { model: string; ba
   if (catLower.includes('phone') || catLower.includes('smart') || catLower.includes('mobile')) {
     if (brandLower.includes('apple')) {
       return [
+        { model: 'iPhone 17 Pro Max', basePrice: 115000 },
+        { model: 'iPhone 17 Pro', basePrice: 95000 },
+        { model: 'iPhone 17', basePrice: 78000 },
+        { model: 'iPhone 16 Pro Max', basePrice: 98000 },
+        { model: 'iPhone 16 Pro', basePrice: 85000 },
+        { model: 'iPhone 16 Plus', basePrice: 72000 },
+        { model: 'iPhone 16', basePrice: 65000 },
         { model: 'iPhone 15 Pro Max', basePrice: 85000 },
         { model: 'iPhone 15 Pro', basePrice: 75000 },
         { model: 'iPhone 15', basePrice: 58000 },
@@ -377,176 +384,175 @@ function getFallbackModels(category: string, brand: string): { model: string; ba
     }
     if (brandLower.includes('samsung')) {
       return [
-        { model: 'Galaxy S24 Ultra', basePrice: 90000 },
-        { model: 'Galaxy S24+', basePrice: 65000 },
-        { model: 'Galaxy S24', basePrice: 55000 },
-        { model: 'Galaxy S23 Ultra', basePrice: 70000 },
-        { model: 'Galaxy S23', basePrice: 45000 },
-        { model: 'Galaxy S22 Ultra', basePrice: 48000 },
-        { model: 'Galaxy A54', basePrice: 22000 },
-        { model: 'Galaxy M54', basePrice: 18000 }
+        { model: 'Galaxy S26 Ultra', basePrice: 105000 },
+        { model: 'Galaxy S26+', basePrice: 78000 },
+        { model: 'Galaxy S26', basePrice: 68000 },
+        { model: 'Galaxy S25 Ultra', basePrice: 95000 },
+        { model: 'Galaxy S25+', basePrice: 72000 },
+        { model: 'Galaxy S25', basePrice: 62000 },
+        { model: 'Galaxy S24 Ultra', basePrice: 82000 },
+        { model: 'Galaxy S24+', basePrice: 60000 },
+        { model: 'Galaxy S24', basePrice: 50000 },
+        { model: 'Galaxy S23 Ultra', basePrice: 62000 },
+        { model: 'Galaxy S23', basePrice: 40000 },
+        { model: 'Galaxy S22 Ultra', basePrice: 42000 },
+        { model: 'Galaxy A55', basePrice: 25000 },
+        { model: 'Galaxy A54', basePrice: 19000 },
+        { model: 'Galaxy M55', basePrice: 18000 }
       ];
     }
     if (brandLower.includes('google')) {
       return [
-        { model: 'Pixel 8 Pro', basePrice: 68000 },
-        { model: 'Pixel 8', basePrice: 48000 },
-        { model: 'Pixel 7 Pro', basePrice: 45000 },
-        { model: 'Pixel 7', basePrice: 32000 },
-        { model: 'Pixel 6a', basePrice: 20000 }
+        { model: 'Pixel 10 Pro XL', basePrice: 85000 },
+        { model: 'Pixel 10 Pro', basePrice: 75000 },
+        { model: 'Pixel 10', basePrice: 58000 },
+        { model: 'Pixel 9 Pro XL', basePrice: 72000 },
+        { model: 'Pixel 9 Pro', basePrice: 62000 },
+        { model: 'Pixel 9 Pro Fold', basePrice: 120000 },
+        { model: 'Pixel 9', basePrice: 48000 },
+        { model: 'Pixel 8 Pro', basePrice: 42000 },
+        { model: 'Pixel 8', basePrice: 32000 },
+        { model: 'Pixel 7 Pro', basePrice: 28000 },
+        { model: 'Pixel 7a', basePrice: 20000 }
       ];
     }
     if (brandLower.includes('oneplus')) {
       return [
-        { model: 'OnePlus 12', basePrice: 58000 },
-        { model: 'OnePlus 12R', basePrice: 38000 },
-        { model: 'OnePlus 11', basePrice: 42000 },
-        { model: 'OnePlus 10 Pro', basePrice: 30000 },
-        { model: 'OnePlus Nord 3', basePrice: 22000 },
-        { model: 'OnePlus Nord CE 3 Lite', basePrice: 15000 }
+        { model: 'OnePlus 13', basePrice: 62000 },
+        { model: 'OnePlus 12', basePrice: 48000 },
+        { model: 'OnePlus 12R', basePrice: 34000 },
+        { model: 'OnePlus 11', basePrice: 35000 },
+        { model: 'OnePlus 10 Pro', basePrice: 25000 },
+        { model: 'OnePlus Nord 4', basePrice: 24000 },
+        { model: 'OnePlus Nord 3', basePrice: 16000 }
       ];
     }
     if (brandLower.includes('realme')) {
       return [
-        { model: 'Realme GT5 Pro', basePrice: 45000 },
-        { model: 'Realme GT Neo 6', basePrice: 28000 },
-        { model: 'Realme P1 Pro 5G', basePrice: 20000 },
-        { model: 'Realme P1 5G', basePrice: 16000 },
-        { model: 'Realme 12 Pro+', basePrice: 26000 },
-        { model: 'Realme 12 Pro', basePrice: 22000 },
-        { model: 'Realme 11 Pro+', basePrice: 21000 },
-        { model: 'Realme 11 Pro', basePrice: 18000 },
-        { model: 'Realme 10 Pro+', basePrice: 15000 },
-        { model: 'Realme 9 Pro+', basePrice: 13000 },
-        { model: 'Realme 8 Pro', basePrice: 10000 },
-        { model: 'Realme 7 Pro', basePrice: 8500 },
-        { model: 'Realme C55', basePrice: 9000 },
-        { model: 'Realme Narzo 60 Pro', basePrice: 15000 }
+        { model: 'Realme GT6', basePrice: 35000 },
+        { model: 'Realme GT6T', basePrice: 26000 },
+        { model: 'Realme GT5 Pro', basePrice: 38000 },
+        { model: 'Realme P2 Pro 5G', basePrice: 22000 },
+        { model: 'Realme P1 Pro 5G', basePrice: 17000 },
+        { model: 'Realme P1 5G', basePrice: 14000 },
+        { model: 'Realme 13 Pro+ 5G', basePrice: 25000 },
+        { model: 'Realme 12 Pro+', basePrice: 21000 },
+        { model: 'Realme 11 Pro+', basePrice: 17000 },
+        { model: 'Realme 10 Pro+', basePrice: 13000 },
+        { model: 'Realme Narzo 70 Pro', basePrice: 16000 }
       ];
     }
     if (brandLower.includes('redmi') || brandLower.includes('xiaomi') || brandLower.includes('mi')) {
       return [
-        { model: 'Xiaomi 14 Ultra', basePrice: 85000 },
-        { model: 'Xiaomi 14', basePrice: 55000 },
-        { model: 'Xiaomi 13 Pro', basePrice: 48000 },
-        { model: 'Redmi Note 13 Pro+ 5G', basePrice: 25000 },
-        { model: 'Redmi Note 13 Pro', basePrice: 21000 },
-        { model: 'Redmi Note 13', basePrice: 14000 },
-        { model: 'Redmi Note 12 Pro+ 5G', basePrice: 20000 },
-        { model: 'Redmi Note 12 Pro', basePrice: 17000 },
-        { model: 'Redmi Note 12', basePrice: 12000 },
-        { model: 'Redmi Note 11 Pro+', basePrice: 15000 },
-        { model: 'Redmi Note 10 Pro Max', basePrice: 11000 },
-        { model: 'Redmi Note 9 Pro', basePrice: 8000 }
+        { model: 'Xiaomi 15 Ultra', basePrice: 92000 },
+        { model: 'Xiaomi 15', basePrice: 62000 },
+        { model: 'Xiaomi 14 Ultra', basePrice: 75000 },
+        { model: 'Xiaomi 14', basePrice: 48000 },
+        { model: 'Redmi Note 14 Pro+ 5G', basePrice: 26000 },
+        { model: 'Redmi Note 14 Pro', basePrice: 22000 },
+        { model: 'Redmi Note 14', basePrice: 15000 },
+        { model: 'Redmi Note 13 Pro+ 5G', basePrice: 21000 },
+        { model: 'Redmi Note 13 Pro', basePrice: 17000 },
+        { model: 'Redmi Note 12 Pro+', basePrice: 15000 }
       ];
     }
     if (brandLower.includes('poco')) {
       return [
-        { model: 'POCO X6 Pro 5G', basePrice: 22000 },
-        { model: 'POCO X6 5G', basePrice: 17000 },
-        { model: 'POCO F5 5G', basePrice: 24000 },
-        { model: 'POCO F4 5G', basePrice: 16000 },
-        { model: 'POCO X5 Pro 5G', basePrice: 15000 },
-        { model: 'POCO X4 Pro 5G', basePrice: 12000 },
-        { model: 'POCO M6 Pro 5G', basePrice: 10000 }
+        { model: 'POCO F6 Pro', basePrice: 32000 },
+        { model: 'POCO F6', basePrice: 25000 },
+        { model: 'POCO X6 Pro 5G', basePrice: 20000 },
+        { model: 'POCO X6 5G', basePrice: 15000 },
+        { model: 'POCO F5 5G', basePrice: 18000 },
+        { model: 'POCO M6 Pro 5G', basePrice: 9000 }
       ];
     }
     if (brandLower.includes('vivo')) {
       return [
-        { model: 'Vivo X100 Pro', basePrice: 72000 },
-        { model: 'Vivo X100', basePrice: 54000 },
-        { model: 'Vivo V30 Pro', basePrice: 36000 },
-        { model: 'Vivo V30', basePrice: 28000 },
-        { model: 'Vivo V29 Pro', basePrice: 27000 },
-        { model: 'Vivo V27 Pro', basePrice: 22000 },
-        { model: 'Vivo T2x 5G', basePrice: 10000 },
-        { model: 'Vivo Y200 5G', basePrice: 15000 }
+        { model: 'Vivo X100 Ultra', basePrice: 78000 },
+        { model: 'Vivo X100 Pro', basePrice: 64000 },
+        { model: 'Vivo V40 Pro', basePrice: 38000 },
+        { model: 'Vivo V40', basePrice: 30000 },
+        { model: 'Vivo V30 Pro', basePrice: 31000 },
+        { model: 'Vivo V30', basePrice: 24000 },
+        { model: 'Vivo T3 Ultra', basePrice: 25000 },
+        { model: 'Vivo T3x 5G', basePrice: 11000 }
       ];
     }
     if (brandLower.includes('oppo')) {
       return [
-        { model: 'Oppo Find X7 Ultra', basePrice: 65000 },
-        { model: 'Oppo Reno 11 Pro 5G', basePrice: 32000 },
-        { model: 'Oppo Reno 11 5G', basePrice: 25000 },
-        { model: 'Oppo Reno 10 Pro+', basePrice: 35000 },
-        { model: 'Oppo Reno 8 Pro 5G', basePrice: 20000 },
-        { model: 'Oppo F25 Pro 5G', basePrice: 19000 },
-        { model: 'Oppo F23 5G', basePrice: 15000 },
-        { model: 'Oppo A78 5G', basePrice: 13000 }
+        { model: 'Oppo Find X7 Ultra', basePrice: 58000 },
+        { model: 'Oppo Reno 12 Pro 5G', basePrice: 34000 },
+        { model: 'Oppo Reno 12 5G', basePrice: 27000 },
+        { model: 'Oppo Reno 11 Pro 5G', basePrice: 26000 },
+        { model: 'Oppo F27 Pro+ 5G', basePrice: 20000 },
+        { model: 'Oppo F25 Pro 5G', basePrice: 16000 },
+        { model: 'Oppo A3 Pro', basePrice: 14000 }
       ];
     }
     if (brandLower.includes('motorola')) {
       return [
-        { model: 'Motorola Edge 50 Ultra', basePrice: 50000 },
-        { model: 'Motorola Edge 50 Pro', basePrice: 28000 },
-        { model: 'Motorola Edge 40', basePrice: 20000 },
-        { model: 'Motorola Edge 40 Neo', basePrice: 17000 },
-        { model: 'Moto G84 5G', basePrice: 14000 },
-        { model: 'Moto G54 5G', basePrice: 11000 },
-        { model: 'Motorola Razr 40 Ultra', basePrice: 48000 }
+        { model: 'Motorola Edge 50 Ultra', basePrice: 48000 },
+        { model: 'Motorola Edge 50 Pro', basePrice: 26000 },
+        { model: 'Motorola Edge 50 Fusion', basePrice: 20000 },
+        { model: 'Motorola Edge 40', basePrice: 17000 },
+        { model: 'Moto G85 5G', basePrice: 15000 },
+        { model: 'Motorola Razr 50 Ultra', basePrice: 62000 }
       ];
     }
     if (brandLower.includes('nothing')) {
       return [
-        { model: 'Nothing Phone (2)', basePrice: 32000 },
-        { model: 'Nothing Phone (2a)', basePrice: 20000 },
-        { model: 'Nothing Phone (1)', basePrice: 18000 }
+        { model: 'Nothing Phone (2a) Plus', basePrice: 23000 },
+        { model: 'Nothing Phone (2)', basePrice: 28000 },
+        { model: 'Nothing Phone (2a)', basePrice: 18000 },
+        { model: 'Nothing Phone (1)', basePrice: 14000 }
       ];
     }
     if (brandLower.includes('iqoo')) {
       return [
-        { model: 'iQOO 12 5G', basePrice: 46000 },
-        { model: 'iQOO Neo 9 Pro', basePrice: 30000 },
-        { model: 'iQOO Z9 5G', basePrice: 16000 },
-        { model: 'iQOO Neo 7 Pro', basePrice: 24000 },
-        { model: 'iQOO 11 5G', basePrice: 35000 },
-        { model: 'iQOO 9 Pro 5G', basePrice: 25000 }
+        { model: 'iQOO 12 5G', basePrice: 42000 },
+        { model: 'iQOO Neo 9 Pro', basePrice: 28000 },
+        { model: 'iQOO Z9s Pro 5G', basePrice: 22000 },
+        { model: 'iQOO Z9 5G', basePrice: 14000 },
+        { model: 'iQOO Neo 7 Pro', basePrice: 19000 }
       ];
     }
     if (brandLower.includes('infinix')) {
       return [
-        { model: 'Infinix GT 10 Pro', basePrice: 15000 },
-        { model: 'Infinix Note 30 5G', basePrice: 11000 },
-        { model: 'Infinix Zero 30 5G', basePrice: 16000 },
-        { model: 'Infinix Note 40 Pro 5G', basePrice: 17000 }
+        { model: 'Infinix GT 20 Pro', basePrice: 18000 },
+        { model: 'Infinix Note 40 Pro+ 5G', basePrice: 16000 },
+        { model: 'Infinix Zero 30 5G', basePrice: 13000 }
       ];
     }
     if (brandLower.includes('tecno')) {
       return [
-        { model: 'Tecno Camon 30 Pro 5G', basePrice: 18000 },
-        { model: 'Tecno Pova 6 Pro 5G', basePrice: 15000 },
-        { model: 'Tecno Phantom V Fold', basePrice: 45000 },
-        { model: 'Tecno Camon 20 Premier 5G', basePrice: 19000 }
+        { model: 'Tecno Phantom V Flip 2', basePrice: 35000 },
+        { model: 'Tecno Camon 30 Premier 5G', basePrice: 22000 },
+        { model: 'Tecno Pova 6 Pro 5G', basePrice: 13000 }
       ];
     }
     if (brandLower.includes('honor')) {
       return [
-        { model: 'Honor 90 5G', basePrice: 22000 },
-        { model: 'Honor X9b 5G', basePrice: 18000 },
-        { model: 'Honor 70 5G', basePrice: 15000 }
+        { model: 'Honor 200 Pro 5G', basePrice: 38000 },
+        { model: 'Honor 200 5G', basePrice: 26000 },
+        { model: 'Honor X9b 5G', basePrice: 15000 }
       ];
     }
     if (brandLower.includes('nokia')) {
       return [
-        { model: 'Nokia XR21', basePrice: 24000 },
-        { model: 'Nokia X30 5G', basePrice: 20000 },
-        { model: 'Nokia G42 5G', basePrice: 9000 },
-        { model: 'Nokia 6.1 Plus', basePrice: 5000 },
-        { model: 'Nokia 8.1', basePrice: 7000 }
+        { model: 'Nokia XR21 5G', basePrice: 20000 },
+        { model: 'Nokia G42 5G', basePrice: 8500 }
       ];
     }
     if (brandLower.includes('sony')) {
       return [
-        { model: 'Xperia 1 V', basePrice: 58000 },
-        { model: 'Xperia 5 V', basePrice: 45000 },
-        { model: 'Xperia 10 V', basePrice: 22000 }
+        { model: 'Xperia 1 VI', basePrice: 65000 },
+        { model: 'Xperia 5 V', basePrice: 38000 }
       ];
     }
     if (brandLower.includes('asus')) {
       return [
-        { model: 'ROG Phone 8 Pro', basePrice: 75000 },
-        { model: 'ROG Phone 7 Ultimate', basePrice: 58000 },
-        { model: 'Zenfone 10', basePrice: 38000 }
+        { model: 'ROG Phone 8 Pro', basePrice: 68000 },
+        { model: 'ROG Phone 8', basePrice: 55000 }
       ];
     }
   }
@@ -554,36 +560,41 @@ function getFallbackModels(category: string, brand: string): { model: string; ba
   if (catLower.includes('laptop')) {
     if (brandLower.includes('apple')) {
       return [
-        { model: 'MacBook Pro M3 Max', basePrice: 220000 },
-        { model: 'MacBook Pro M3 Pro', basePrice: 160000 },
-        { model: 'MacBook Pro M3', basePrice: 120000 },
-        { model: 'MacBook Air M3', basePrice: 95000 },
-        { model: 'MacBook Air M2', basePrice: 78000 },
-        { model: 'MacBook Air M1', basePrice: 55000 }
+        { model: 'MacBook Pro M4 Max', basePrice: 260000 },
+        { model: 'MacBook Pro M4 Pro', basePrice: 190000 },
+        { model: 'MacBook Pro M4', basePrice: 140000 },
+        { model: 'MacBook Pro M3 Max', basePrice: 200000 },
+        { model: 'MacBook Pro M3 Pro', basePrice: 150000 },
+        { model: 'MacBook Pro M3', basePrice: 110000 },
+        { model: 'MacBook Air M3', basePrice: 90000 },
+        { model: 'MacBook Air M2', basePrice: 72000 },
+        { model: 'MacBook Air M1', basePrice: 50000 }
       ];
     }
     if (brandLower.includes('dell')) {
       return [
-        { model: 'XPS 15 9530', basePrice: 110000 },
-        { model: 'XPS 13 9320', basePrice: 85000 },
-        { model: 'Inspiron 15', basePrice: 35000 },
-        { model: 'Latitude 5440', basePrice: 45000 }
+        { model: 'XPS 16 9640', basePrice: 160000 },
+        { model: 'XPS 15 9530', basePrice: 105000 },
+        { model: 'XPS 13 9340 (Core Ultra)', basePrice: 98000 },
+        { model: 'Inspiron 15 3520', basePrice: 32000 },
+        { model: 'Latitude 5440', basePrice: 42000 }
       ];
     }
     if (brandLower.includes('hp')) {
       return [
-        { model: 'Spectre x360', basePrice: 95000 },
-        { model: 'Envy 13', basePrice: 55000 },
-        { model: 'Pavilion 15', basePrice: 38000 },
-        { model: 'EliteBook 840', basePrice: 50000 }
+        { model: 'HP Spectre x360 14 (Core Ultra)', basePrice: 110000 },
+        { model: 'HP Omen 16', basePrice: 85000 },
+        { model: 'HP Envy x360', basePrice: 58000 },
+        { model: 'HP Pavilion 15', basePrice: 35000 }
       ];
     }
     if (brandLower.includes('lenovo')) {
       return [
-        { model: 'ThinkPad X1 Carbon', basePrice: 125000 },
-        { model: 'Yoga 9i', basePrice: 90000 },
-        { model: 'IdeaPad 3', basePrice: 30000 },
-        { model: 'Legion 5', basePrice: 65000 }
+        { model: 'ThinkPad X1 Carbon Gen 12', basePrice: 140000 },
+        { model: 'Yoga Book 9i Dual Screen', basePrice: 150000 },
+        { model: 'Yoga Pro 9i', basePrice: 105000 },
+        { model: 'Legion Pro 5i', basePrice: 88000 },
+        { model: 'IdeaPad Slim 5', basePrice: 45000 }
       ];
     }
   }
@@ -591,45 +602,60 @@ function getFallbackModels(category: string, brand: string): { model: string; ba
   if (catLower.includes('mac')) {
     if (brandLower.toLowerCase().includes('air')) {
       return [
-        { model: 'MacBook Air M3 (2024)', basePrice: 95000 },
-        { model: 'MacBook Air M2 (2022)', basePrice: 78000 },
-        { model: 'MacBook Air M1 (2020)', basePrice: 55000 }
+        { model: 'MacBook Air M3 (2024)', basePrice: 90000 },
+        { model: 'MacBook Air M2 (2022)', basePrice: 72000 },
+        { model: 'MacBook Air M1 (2020)', basePrice: 50000 }
       ];
     }
     if (brandLower.toLowerCase().includes('pro')) {
       return [
-        { model: 'MacBook Pro M3 Max (2023)', basePrice: 220000 },
-        { model: 'MacBook Pro M3 Pro (2023)', basePrice: 160000 },
-        { model: 'MacBook Pro M3 (2023)', basePrice: 120000 },
-        { model: 'MacBook Pro M2 (2023)', basePrice: 105000 },
-        { model: 'MacBook Pro M1 (2021)', basePrice: 85000 }
+        { model: 'MacBook Pro M4 Max (2024)', basePrice: 260000 },
+        { model: 'MacBook Pro M4 Pro (2024)', basePrice: 190000 },
+        { model: 'MacBook Pro M4 (2024)', basePrice: 140000 },
+        { model: 'MacBook Pro M3 Max (2023)', basePrice: 200000 },
+        { model: 'MacBook Pro M3 Pro (2023)', basePrice: 150000 },
+        { model: 'MacBook Pro M3 (2023)', basePrice: 110000 },
+        { model: 'MacBook Pro M2 (2023)', basePrice: 95000 }
       ];
     }
     return [
-      { model: 'iMac M3', basePrice: 110000 },
-      { model: 'Mac mini M2', basePrice: 45000 },
-      { model: 'Mac Studio M2 Max', basePrice: 160000 }
+      { model: 'iMac M4 (2024)', basePrice: 125000 },
+      { model: 'Mac mini M4 Pro (2024)', basePrice: 85000 },
+      { model: 'Mac mini M4 (2024)', basePrice: 55000 },
+      { model: 'Mac Studio M2 Ultra', basePrice: 280000 },
+      { model: 'Mac Studio M2 Max', basePrice: 150000 }
     ];
   }
 
   if (catLower.includes('tablet')) {
     if (brandLower.includes('apple')) {
       return [
-        { model: 'iPad Pro M2', basePrice: 72000 },
-        { model: 'iPad Air 5th Gen', basePrice: 48000 },
-        { model: 'iPad 10th Gen', basePrice: 32000 },
-        { model: 'iPad mini 6', basePrice: 38000 }
+        { model: 'iPad Pro M4 (OLED)', basePrice: 88000 },
+        { model: 'iPad Air M2 (2024)', basePrice: 54000 },
+        { model: 'iPad Pro M2 (2022)', basePrice: 65000 },
+        { model: 'iPad Air 5th Gen (2022)', basePrice: 42000 },
+        { model: 'iPad 10th Gen', basePrice: 28000 },
+        { model: 'iPad mini 6', basePrice: 34000 }
       ];
     }
     if (brandLower.includes('samsung')) {
       return [
-        { model: 'Galaxy Tab S9 Ultra', basePrice: 75000 },
-        { model: 'Galaxy Tab S9', basePrice: 52000 },
-        { model: 'Galaxy Tab S8', basePrice: 38000 },
-        { model: 'Galaxy Tab A9+', basePrice: 15000 }
+        { model: 'Galaxy Tab S10 Ultra', basePrice: 85000 },
+        { model: 'Galaxy Tab S10+', basePrice: 68000 },
+        { model: 'Galaxy Tab S9 Ultra', basePrice: 68000 },
+        { model: 'Galaxy Tab S9', basePrice: 46000 },
+        { model: 'Galaxy Tab S9 FE', basePrice: 28000 },
+        { model: 'Galaxy Tab A9+', basePrice: 13000 }
       ];
     }
   }
+  
+  // Generic fallback if not matched
+  return [
+    { model: `${brand} Model A`, basePrice: 25000 },
+    { model: `${brand} Model B`, basePrice: 18000 },
+    { model: `${brand} Model C`, basePrice: 12000 }
+  ];
   
   // Generic fallback if not matched
   return [
