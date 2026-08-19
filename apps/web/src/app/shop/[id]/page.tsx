@@ -309,9 +309,9 @@ export default function ProductPage() {
                     <div>
                       <h3 className="font-bold text-[#1E1B29] text-[0.9rem] uppercase tracking-wider text-gray-500">Price</h3>
                       <div className="flex items-baseline gap-2 mt-1">
-                        <span className="text-3xl font-black text-green-600">₹{product.price.toLocaleString()}</span>
+                        <span className="offer-price text-3xl font-black">₹{product.price.toLocaleString()}</span>
                         {product.originalPrice ? (
-                          <span className="text-sm text-red-500 line-through">₹{product.originalPrice.toLocaleString()}</span>
+                          <span className="original-price text-sm">₹{product.originalPrice.toLocaleString()}</span>
                         ) : null}
                       </div>
                     </div>

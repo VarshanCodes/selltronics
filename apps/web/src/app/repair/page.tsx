@@ -70,6 +70,21 @@ const UPSELLS = [
   { id: 'charger_cable', label: 'Reinforced Type-C Cable (1m)', price: 399, description: 'Fast charging, braided nylon durability' },
 ];
 
+const RECENT_APPLE_PHONE_MODELS = ['iPhone 17 Pro Max', 'iPhone 17 Pro', 'iPhone 17'];
+
+function prioritizeRecentRepairModels(category: string, brand: string, models: string[]): string[] {
+  const isApplePhone = /apple/i.test(brand) && /(phone|smart|mobile)/i.test(category);
+  if (!isApplePhone) return models;
+
+  const seen = new Set<string>();
+  return [...RECENT_APPLE_PHONE_MODELS, ...models].filter((model) => {
+    const key = model.trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export default function RepairPage() {
   const [step, setStep] = useState<RepairStep>(1);
   const [loading, setLoading] = useState(false);
@@ -85,7 +100,7 @@ export default function RepairPage() {
   const [modelsList, setModelsList] = useState<{ model: string }[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
-  const [showManualInput, setShowManualInput] = useState<boolean>(false);
+  const [isShowingAllModels, setIsShowingAllModels] = useState<boolean>(false);
   const [showAllBrands, setShowAllBrands] = useState<boolean>(false);
 
   const [customerInfo, setCustomerInfo] = useState({
@@ -119,6 +134,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
   if (catLower.includes('phone') || catLower.includes('smart') || catLower.includes('mobile')) {
     if (brandLower.includes('apple')) {
       return [
+        'iPhone 17 Pro Max', 'iPhone 17 Pro', 'iPhone 17',
         'iPhone 16 Pro Max', 'iPhone 16 Pro', 'iPhone 16 Plus', 'iPhone 16',
         'iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15',
         'iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14',
@@ -271,18 +287,18 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
         const data = await getRepairDeviceModels(category, brand);
         if (isCurrentRequest) {
           if (Array.isArray(data) && data.length > 0) {
-            setModelsList(data.map((model) => ({ model })));
+            setModelsList(prioritizeRecentRepairModels(category, brand, data).map((model) => ({ model })));
           } else {
             // Load beautiful local models list if API is rate-limited / quota exhausted
             const fallback = getFallbackRepairModels(category, brand);
-            setModelsList(fallback.map((model) => ({ model })));
+            setModelsList(prioritizeRecentRepairModels(category, brand, fallback).map((model) => ({ model })));
           }
         }
       } catch (err) {
         console.error('Failed to load models:', err);
         if (isCurrentRequest) {
           const fallback = getFallbackRepairModels(category, brand);
-          setModelsList(fallback.map((model) => ({ model })));
+          setModelsList(prioritizeRecentRepairModels(category, brand, fallback).map((model) => ({ model })));
         }
       } finally {
         if (isCurrentRequest) setLoadingModels(false);
@@ -355,19 +371,23 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
 
       // 3. Write payload to repair_requests collection
       const orderPayload = {
-        userId: currentUser.uid,
-        service: SERVICES.find((s) => s.id === selectedService)?.title || selectedService,
-        category,
-        brand,
-        model: modelName,
+        userId: currentUser.uid || '',
+        service: SERVICES.find((s) => s.id === selectedService)?.title || selectedService || '',
+        repairIssue: SERVICES.find((s) => s.id === selectedService)?.title || selectedService || '',
+        category: category || '',
+        deviceCategory: category || '',
+        brand: brand || '',
+        deviceBrand: brand || '',
+        model: modelName || '',
+        deviceModel: modelName || '',
         addons,
-        customerName: customerInfo.name,
-        customerPhone: customerInfo.phone,
-        customerWhatsapp: customerInfo.whatsappNumber,
-        customerAddress: customerInfo.address,
-        customerCity: customerInfo.city,
-        customerState: customerInfo.state,
-        customerPincode: customerInfo.pincode,
+        customerName: customerInfo.name || '',
+        customerPhone: customerInfo.phone || '',
+        customerWhatsapp: customerInfo.whatsappNumber || '',
+        customerAddress: customerInfo.address || '',
+        customerCity: customerInfo.city || '',
+        customerState: customerInfo.state || '',
+        customerPincode: customerInfo.pincode || '',
         status: 'pending_pickup',
         createdAt: serverTimestamp(),
       };
@@ -401,43 +421,28 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
 
       {/* Step Indicator */}
       {!successId && (
-        <div className="flex items-center justify-center gap-2 md:gap-4 mb-8 text-sm font-semibold">
-          {[
-            { s: 1, label: 'Service' },
-            { s: 2, label: 'Category' },
-            { s: 3, label: 'Brand' },
-            { s: 4, label: 'Model' },
-            { s: 5, label: 'Upsell' },
-            { s: 6, label: 'Booking' },
-          ].map((item) => (
-            <div key={item.s} className="flex items-center">
-              <span
-                className={`w-7 h-7 rounded-full flex items-center justify-center border text-xs ${
-                  step === item.s
-                    ? 'bg-[#5B21B6] border-[#5B21B6] text-white'
-                    : step > item.s
-                    ? 'bg-[#E3D9F9] border-[#E3D9F9] text-[#5B21B6]'
-                    : 'bg-white border-[#E3D9F9] text-[#6E6683]'
-                }`}
-              >
-                {item.s}
-              </span>
-              <span
-                className={`hidden sm:inline ml-2 ${
-                  step === item.s ? 'text-[#1E1B29] font-bold' : 'text-[#6E6683]'
-                }`}
-              >
-                {item.label}
-              </span>
-              {item.s < 6 && <span className="text-[#E3D9F9] mx-2">➔</span>}
-            </div>
-          ))}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center gap-3 bg-[#FAF7FF] border border-[#E3D9F9] px-5 py-2.5 rounded-full shadow-sm">
+            <span className="w-8 h-8 rounded-full bg-[#5B21B6] text-white flex items-center justify-center font-bold text-sm">
+              {step}
+            </span>
+            <span className="text-[#1E1B29] font-bold text-sm">
+              Step {step} of 6: {[
+                'Select Service',
+                'Select Category',
+                'Select Brand',
+                'Select Model',
+                'Frequently Added Together',
+                'Booking Details'
+              ][step - 1]}
+            </span>
+          </div>
         </div>
       )}
 
       {/* Main Form Body */}
       {successId ? (
-        <section className="bg-white border border-[#E3D9F9] rounded-3xl p-8 text-center shadow-lg animate-fade-in">
+        <section className="bg-white border border-[#E3D9F9] rounded-3xl p-8 text-center shadow-lg animate-fade-in w-full">
           <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 font-bold">
             ✓
           </div>
@@ -448,7 +453,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
           <div className="bg-[#FAF7FF] border border-[#F0EAFB] rounded-2xl p-4 my-6 inline-block font-mono text-sm text-[#5B21B6]">
             Order Reference ID: {successId}
           </div>
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-4 flex-wrap">
             <button
               onClick={() => {
                 setSuccessId(null);
@@ -472,7 +477,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
           </div>
         </section>
       ) : (
-        <div className="bg-white border border-[#E3D9F9] rounded-3xl p-6 md:p-8 shadow-sm">
+        <div className="bg-white border border-[#E3D9F9] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm w-full">
           {/* STEP 1: SERVICE GRID */}
           {step === 1 && (
             <div>
@@ -509,7 +514,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                 </span>
               </div>
               
-              <div className="device-grid-home" style={{ marginTop: 24 }}>
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2" style={{ marginTop: 24 }}>
                 {sellCategories.map((item) => (
                   <button
                     key={item.name}
@@ -519,7 +524,6 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                       setBrand('');
                       setModelName('');
                       setModelsList([]);
-                      setShowManualInput(false);
                       setStep(3); // Go directly to Brand step
                     }}
                     className="device-category"
@@ -527,7 +531,9 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                       textAlign: 'left',
                       width: '100%',
                       cursor: 'pointer',
-                      display: 'block'
+                      display: 'block',
+                      minHeight: 'auto',
+                      padding: '20px'
                     }}
                   >
                     <div>
@@ -567,7 +573,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                 </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(118px, 1fr))', gap: 10, marginTop: 24 }}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-6">
                 {(() => {
                   const allBrands = POPULAR_BRANDS[category] || [];
                   const visibleBrands = showAllBrands ? allBrands : allBrands.slice(0, 3);
@@ -579,7 +585,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                         setBrand(item.name);
                         setModelName('');
                         setModelsList([]);
-                        setShowManualInput(item.name === 'Other brand');
+                        setIsShowingAllModels(false);
                         setStep(4);
                       }}
                       style={{
@@ -662,14 +668,17 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
               </div>
 
               <div className="flex flex-col gap-4 mt-6">
-                {loadingModels ? (
-                  <div className="text-center py-8">
-                    <span className="text-[#7C3AED] font-bold animate-pulse">Finding compatible models...</span>
+                {loadingModels || (modelsList.length === 0 && brand !== 'Other brand') ? (
+                  <div className="py-4" aria-label="Loading compatible models" role="status">
+                    {[0, 1, 2].map((index) => (
+                      <div key={index} className="animate-pulse bg-gray-200 h-12 w-full rounded-lg mb-2" />
+                    ))}
                   </div>
-                ) : !showManualInput ? (
+                ) : (
                   <div>
-                    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-                      {modelsList.map((item) => (
+                    {/* Render first 3 models by default, or all if isShowingAllModels is true */}
+                    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                      {(isShowingAllModels ? modelsList : modelsList.slice(0, 3)).map((item) => (
                         <button
                           key={item.model}
                           type="button"
@@ -695,49 +704,44 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                         </button>
                       ))}
                     </div>
-                    {modelsList.length === 0 && (
-                      <p className="text-center text-sm text-[#6E6683] py-4">
-                        No matching models were found. You can enter your device model below.
-                      </p>
+
+                    {/* Show More Models Button */}
+                    {!isShowingAllModels && modelsList.length > 3 && (
+                      <div className="mt-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setIsShowingAllModels(true)}
+                          className="inline-flex items-center gap-2 px-5 py-2 bg-[#F3ECFF] hover:bg-[#E3D9F9] text-[#5B21B6] rounded-full font-bold text-sm transition-all cursor-pointer"
+                        >
+                          + Show More
+                        </button>
+                      </div>
                     )}
                     
-                    <div className="mt-6 text-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowManualInput(true);
-                          setModelName('');
-                        }}
-                        className="text-sm font-bold text-[#7C3AED] hover:underline cursor-pointer"
-                      >
-                        My device is not listed
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="field">
-                      <span>Enter custom device model</span>
+                    {isShowingAllModels && modelsList.length > 3 && (
+                      <div className="mt-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setIsShowingAllModels(false)}
+                          className="inline-flex items-center gap-2 px-5 py-2 text-[#6E6683] hover:text-[#5B21B6] rounded-full font-bold text-sm transition-all cursor-pointer"
+                        >
+                          Show Less
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Always-Visible Custom Model Input */}
+                    <div className="border-t border-[#F0EAFB] pt-6 mt-6">
+                      <label className="text-sm font-bold text-[#1E1B29] block mb-2">
+                        Don't see your device? Enter model name manually:
+                      </label>
                       <input
                         type="text"
                         placeholder="e.g. iPhone 13 Pro Max"
                         value={modelName}
                         onChange={(e) => setModelName(e.target.value)}
-                        required
-                        style={{ width: '100%', marginTop: 8 }}
+                        className="w-full border border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] text-[#1E1B29] font-medium"
                       />
-                    </div>
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowManualInput(false);
-                          setModelName('');
-                        }}
-                        className="text-sm font-bold text-[#7C3AED] hover:underline cursor-pointer"
-                      >
-                        Show popular models list
-                      </button>
                     </div>
                   </div>
                 )}
@@ -755,7 +759,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                 <button
                   type="button"
                   onClick={() => setStep(5)}
-                  disabled={!brand || !modelName}
+                  disabled={!brand || !modelName.trim()}
                   className="px-6 py-2.5 bg-[#5B21B6] hover:bg-[#4C1D95] text-white rounded-full font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md cursor-pointer"
                 >
                   Continue

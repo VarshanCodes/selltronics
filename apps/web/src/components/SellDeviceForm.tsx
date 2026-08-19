@@ -8,7 +8,7 @@ import { auth, db } from '../config/firebase';
 import { getLiveModelsAndPrices, getSingleModelPrice } from '@/app/actions/pricingEngine';
 
 type DeviceType = 'Smartphones' | 'Laptops' | 'Tablets' | 'Mac' | 'Other devices';
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 type Brand = { name: string; logo?: string; mark?: string };
 type CategoryCopy = {
   eyebrow: string;
@@ -671,6 +671,7 @@ export default function SellDeviceForm() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam);
   const initialCategory = normalizeCategory(categoryParam);
   const [step, setStep] = useState<Step>(1);
+  const [expectedPrice, setExpectedPrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successId, setSuccessId] = useState<string | null>(null);
@@ -729,8 +730,8 @@ export default function SellDeviceForm() {
         }));
         // Auto-skip Google verification page if authenticated
         setStep((currentStep) => {
-          if (currentStep === 8) {
-            return 9;
+          if (currentStep === 7) {
+            return 8;
           }
           return currentStep;
         });
@@ -907,24 +908,18 @@ export default function SellDeviceForm() {
 
   const priceRange = calculateEstimatedPriceRange();
 
-  // Prefill expected price when entering final page
-  useEffect(() => {
-    if (step === 9 && !form.expectedPrice && priceRange.max > 0) {
-      const avgPrice = Math.round((priceRange.min + priceRange.max) / 2);
-      update('expectedPrice', avgPrice.toString());
-    }
-  }, [step, priceRange]);
+  // Estimation prefill logic removed
 
   const update = (field: keyof typeof form, value: any) => setForm((current) => ({ ...current, [field]: value }));
   const toggle = (field: 'defects' | 'problems' | 'accessories', value: string) => setForm((current) => ({ ...current, [field]: current[field].includes(value) ? current[field].filter((item) => item !== value) : [...current[field], value] }));
   
   const goBack = () => {
     setStep((current) => {
-      if (current === 9) {
+      if (current === 8) {
         if (currentUser) {
-          return 7; // Go straight back to estimate
+          return 6; // Go straight back to images (skip Step 7 if signed in)
         } else {
-          return 8; // Back to google sign in
+          return 7; // Back to google sign in
         }
       }
       return Math.max(1, current - 1) as Step;
@@ -933,14 +928,14 @@ export default function SellDeviceForm() {
   
   const goNext = () => {
     setStep((current) => {
-      if (current === 7) {
+      if (current === 6) {
         if (currentUser) {
-          return 9; // Skip Step 8 if already signed in
+          return 8; // Skip Step 7 if already signed in
         } else {
-          return 8;
+          return 7;
         }
       }
-      return Math.min(9, current + 1) as Step;
+      return Math.min(8, current + 1) as Step;
     });
   };
 
@@ -953,7 +948,9 @@ export default function SellDeviceForm() {
   const signInWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, new GoogleAuthProvider());
+      setCurrentUser(result.user);
       setForm((current) => ({ ...current, userName: result.user.displayName || current.userName, customerEmail: result.user.email || current.customerEmail }));
+      setStep(8);
       setError('');
     } catch (issue) {
       console.error(issue);
@@ -993,7 +990,7 @@ export default function SellDeviceForm() {
         storage: form.storage || '',
         ram: form.ram || '',
         specs: form.specs || '',
-        expectedPrice: Number(form.expectedPrice) || 0,
+        expectedPrice: Number(expectedPrice) || 0,
         userName: form.userName || '',
         customerPhone: form.customerPhone || '',
         whatsappNumber: form.whatsappNumber || '',
@@ -1088,7 +1085,7 @@ export default function SellDeviceForm() {
         step === 4 ? 'Device condition and accessories.' : 
         step === 5 ? 'Functional or Physical Problems' : 
         step === 6 ? 'Upload device images.' : 
-        step === 7 ? 'Estimated trade-in value.' : 
+        step === 7 ? 'Your expected price.' : 
         step === 8 ? 'Verify your identity.' : 
         'Your pickup details.'
       }</h2>
@@ -1099,7 +1096,7 @@ export default function SellDeviceForm() {
         step === 4 ? 'Select everything that applies. Final value is confirmed at pickup.' : 
         step === 5 ? 'Please select all applicable issues to receive an accurate quote.' : 
         step === 6 ? 'Show us your device condition by uploading up to 6 pictures.' : 
-        step === 7 ? 'Here is the instant estimated quote for your device based on its condition.' : 
+        step === 7 ? 'Sign in to securely submit your expected price and device details.' : 
         step === 8 ? 'Please sign in with Google to secure your pickup request.' : 
         'Confirm your expected price and enter your location details.'
       }</p>
@@ -1321,37 +1318,8 @@ export default function SellDeviceForm() {
       </div>
     </div>}
 
-    {step === 7 && <div style={{ marginTop: 22 }}>
-      <div style={{ padding: '24px', background: 'var(--lavender-100)', borderRadius: '16px', border: '1.5px solid #E3D9F9', textAlign: 'center', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.05)' }}>
-        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--violet-700)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 12 }}>
-          LIVE ESTIMATED TRADE-IN VALUE
-        </span>
-        <h3 style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--ink)', margin: '8px 0 16px' }}>
-          Rs. {priceRange.min.toLocaleString()} - Rs. {priceRange.max.toLocaleString()}
-        </h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', margin: '20px 0', padding: '16px', background: '#fff', borderRadius: '12px', textAlign: 'left', fontSize: '0.9rem' }}>
-          <div>
-            <span style={{ display: 'block', color: '#6E6683', fontSize: '0.8rem' }}>Device</span>
-            <strong style={{ color: 'var(--ink)' }}>{form.brand} {form.deviceName}</strong>
-          </div>
-          <div>
-            <span style={{ display: 'block', color: '#6E6683', fontSize: '0.8rem' }}>Storage &amp; RAM</span>
-            <strong style={{ color: 'var(--ink)' }}>{form.storage} / {form.ram}</strong>
-          </div>
-          <div style={{ gridColumn: '1 / -1', borderTop: '1px solid #FAF7FF', paddingTop: '10px', marginTop: '4px' }}>
-            <span style={{ display: 'block', color: '#6E6683', fontSize: '0.8rem' }}>Evaluated Condition</span>
-            <strong style={{ color: 'var(--violet-700)' }}>{getConditionMultiplier().conditionName}</strong>
-          </div>
-        </div>
 
-        <p style={{ fontSize: '0.78rem', color: '#6E6683', margin: '0 0 8px', lineHeight: 1.4 }}>
-          *This is a live estimate based on current market trends for a {form.brand} {form.deviceName} in {getConditionMultiplier().conditionName.toLowerCase()} condition. Final payout is verified in person upon doorstep inspection.
-        </p>
-      </div>
-    </div>}
-
-    {step === 8 && <div className="sell-form-grid">
+    {step === 7 && !currentUser && <div className="sell-form-grid">
       <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', border: '1px solid #E3D9F9', borderRadius: '16px', background: '#FAF7FF', textAlign: 'center', gap: '16px' }}>
         <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1E1B29' }}>Please verify your identity to proceed</h3>
         <p style={{ fontSize: '0.88rem', color: '#6E6683', maxWidth: '340px' }}>Sign in or Sign up with Google to secure your request and proceed with the pickup details.</p>
@@ -1362,20 +1330,17 @@ export default function SellDeviceForm() {
       </div>
     </div>}
 
-    {step === 9 && <div className="w-full">
+    {step === 8 && <div className="w-full">
       <div className="flex flex-col items-center justify-center text-center w-full mb-8">
-        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--violet-700)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 4 }}>
-          AI Estimated Value
-        </span>
-        <h3 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--ink)', margin: '4px 0' }}>
-          Rs. {priceRange.min.toLocaleString()} - Rs. {priceRange.max.toLocaleString()}
-        </h3>
+        <h2 className="text-2xl font-extrabold text-center text-gray-800 mb-4">
+          Enter your expected price for your device
+        </h2>
         <input 
           type="number" 
-          placeholder="What is your expected value?" 
-          value={form.expectedPrice} 
-          onChange={(e) => update('expectedPrice', e.target.value)}
-          className="text-center text-2xl font-bold border-b-2 border-gray-300 mt-4 p-2 focus:outline-none"
+          placeholder="Enter expected amount" 
+          value={expectedPrice} 
+          onChange={(e) => setExpectedPrice(e.target.value)}
+          className="text-3xl text-center font-bold p-4 border-2 border-blue-500 rounded-xl w-full"
           required
           min="0"
         />
@@ -1395,7 +1360,7 @@ export default function SellDeviceForm() {
     {error && <p className="track-error">{error}</p>}
     <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
       {step > 1 && <button className="btn-ghost" type="button" onClick={goBack}>Back</button>}
-      {step < 9 ? (
+      {step < 8 && step !== 7 ? (
         canContinue && (
           <button 
             className="btn-primary" 
@@ -1403,7 +1368,7 @@ export default function SellDeviceForm() {
             onClick={goNext} 
             style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            {step === 7 ? 'Proceed with Quote' : 'Continue'} 
+            Continue 
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
           </button>
         )
