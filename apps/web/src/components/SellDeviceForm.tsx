@@ -855,7 +855,7 @@ export default function SellDeviceForm() {
       form.problems.includes('Battery Faulty');
       
     if (isCriticalBroken) {
-      return { conditionName: 'Broken', multiplier: 0.25 };
+      return { conditionName: 'Broken', multiplier: 0.60 };
     }
     
     const hasMajorDefect = 
@@ -863,19 +863,19 @@ export default function SellDeviceForm() {
       form.defects.includes('Dead spot/visible line and discoloration on screen');
       
     if (hasMajorDefect) {
-      return { conditionName: 'Fair', multiplier: 0.65 };
+      return { conditionName: 'Fair', multiplier: 0.85 };
     }
     
     const minorIssuesCount = form.defects.length + form.problems.length;
     if (minorIssuesCount >= 3) {
-      return { conditionName: 'Fair', multiplier: 0.65 };
+      return { conditionName: 'Fair', multiplier: 0.85 };
     }
     
     if (minorIssuesCount > 0 || answers.screenOriginal === 'No') {
-      return { conditionName: 'Good', multiplier: 0.85 };
+      return { conditionName: 'Good', multiplier: 1.35 };
     }
     
-    return { conditionName: 'Flawless', multiplier: 1.0 };
+    return { conditionName: 'Flawless', multiplier: 1.60 };
   };
 
   const calculateEstimatedPriceRange = (): { min: number; max: number } => {
@@ -1362,16 +1362,34 @@ export default function SellDeviceForm() {
       </div>
     </div>}
 
-    {step === 9 && <div className="sell-form-grid">
-      <label className="field"><span>Expected price (Rs.)</span><input required type="number" min="0" value={form.expectedPrice} onChange={(e) => update('expectedPrice', e.target.value)} placeholder="e.g. 25000" /></label>
-      <label className="field"><span>Your name</span><input required value={form.userName} onChange={(e) => update('userName', e.target.value)} /></label>
-      <label className="field"><span>Phone number</span><input required type="tel" value={form.customerPhone} onChange={(e) => update('customerPhone', e.target.value)} placeholder="10-digit mobile number" /></label>
-      <label className="field"><span>WhatsApp number</span><input required type="tel" value={form.whatsappNumber} onChange={(e) => update('whatsappNumber', e.target.value)} placeholder="For pickup/status updates" /></label>
-      <label className="field"><span>Email</span><input required type="email" value={form.customerEmail} onChange={(e) => update('customerEmail', e.target.value)} /></label>
-      <label className="field"><span>Full address</span><input required value={form.locationAddress} onChange={(e) => update('locationAddress', e.target.value)} placeholder="House / flat, street, area" /></label>
-      <label className="field"><span>City</span><input required value={form.locationCity} onChange={(e) => update('locationCity', e.target.value)} /></label>
-      <label className="field"><span>State</span><input required value={form.locationState} onChange={(e) => update('locationState', e.target.value)} /></label>
-      <label className="field"><span>Pincode</span><input required value={form.locationPincode} onChange={(e) => update('locationPincode', e.target.value)} /></label>
+    {step === 9 && <div className="w-full">
+      <div className="flex flex-col items-center justify-center text-center w-full mb-8">
+        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--violet-700)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 4 }}>
+          AI Estimated Value
+        </span>
+        <h3 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--ink)', margin: '4px 0' }}>
+          Rs. {priceRange.min.toLocaleString()} - Rs. {priceRange.max.toLocaleString()}
+        </h3>
+        <input 
+          type="number" 
+          placeholder="What is your expected value?" 
+          value={form.expectedPrice} 
+          onChange={(e) => update('expectedPrice', e.target.value)}
+          className="text-center text-2xl font-bold border-b-2 border-gray-300 mt-4 p-2 focus:outline-none"
+          required
+          min="0"
+        />
+      </div>
+      <div className="sell-form-grid">
+        <label className="field"><span>Your name</span><input required value={form.userName} onChange={(e) => update('userName', e.target.value)} /></label>
+        <label className="field"><span>Phone number</span><input required type="tel" value={form.customerPhone} onChange={(e) => update('customerPhone', e.target.value)} placeholder="10-digit mobile number" /></label>
+        <label className="field"><span>WhatsApp number</span><input required type="tel" value={form.whatsappNumber} onChange={(e) => update('whatsappNumber', e.target.value)} placeholder="For pickup/status updates" /></label>
+        <label className="field"><span>Email</span><input required type="email" value={form.customerEmail} onChange={(e) => update('customerEmail', e.target.value)} /></label>
+        <label className="field"><span>Full address</span><input required value={form.locationAddress} onChange={(e) => update('locationAddress', e.target.value)} placeholder="House / flat, street, area" /></label>
+        <label className="field"><span>City</span><input required value={form.locationCity} onChange={(e) => update('locationCity', e.target.value)} /></label>
+        <label className="field"><span>State</span><input required value={form.locationState} onChange={(e) => update('locationState', e.target.value)} /></label>
+        <label className="field"><span>Pincode</span><input required value={form.locationPincode} onChange={(e) => update('locationPincode', e.target.value)} /></label>
+      </div>
     </div>}
 
     {error && <p className="track-error">{error}</p>}

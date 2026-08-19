@@ -6,14 +6,59 @@ import { GoogleGenAI } from "@google/genai";
 // process.env.GEMINI_API_KEY is read securely on the server
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
+/** Returns specific retail model names for the repair flow. */
+export async function getExactDeviceModels(category: string, brand: string): Promise<string[]> {
+  try {
+    const prompt = `
+You are an electronic device database API.
+List EVERY exact retail device model released by ${brand} in the ${category} category from 2015 to 2026.
+
+CRITICAL INSTRUCTIONS:
+1. Order them chronologically from NEWEST (2026 models) to OLDEST.
+2. NEVER use generic placeholders like "Standard", "Pro model", or "Lite".
+3. You MUST output actual specific retail names (e.g., "iPhone 17 Pro Max", "iPhone 17", "Samsung Galaxy S25 Ultra", "Pixel 9 Pro").
+
+Respond STRICTLY with a raw JSON array of strings. No markdown formatting.
+Example: ["iPhone 17 Pro Max", "iPhone 17", "iPhone 16 Pro", "iPhone 16"]
+`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: prompt,
+      config: { tools: [{ googleSearch: {} }] },
+    });
+
+    let rawText = response.text?.trim() || "";
+    if (rawText.startsWith("```json")) {
+      rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+    } else if (rawText.startsWith("```")) {
+      rawText = rawText.replace(/```/g, "").trim();
+    }
+
+    const parsed: unknown = JSON.parse(rawText);
+    if (!Array.isArray(parsed)) return [];
+
+    // Never expose malformed or generic fallback names in the repair picker.
+    return parsed.filter((model): model is string =>
+      typeof model === 'string' &&
+      model.trim().length > 0 &&
+      !/\b(?:standard|pro\s+model|lite\s*(?:model|series)?|pro\s+series)\b/i.test(model)
+    );
+  } catch (error) {
+    console.error("AI Model Fetch Error:", error);
+    return [];
+  }
+}
+
 export async function getLiveModelsAndPrices(category: string, brand: string) {
   try {
     const currentYear = new Date().getFullYear();
     const prompt = `
       You are an API for an electronics trade-in platform.
-      Search the web for the 20-25 most popular and recent ${brand} ${category} models currently in the used market.
-      The current year is ${currentYear}. Make sure to search for and include the absolute latest and most recent releases up to ${currentYear} (e.g. for Apple, search for and include iPhone 16, iPhone 16 Pro, iPhone 17, iPhone 17 Pro series; for Samsung, include Galaxy S25, Galaxy S26 series; for Google, include Pixel 9, Pixel 10 series; for Mac, include M4 chip models, etc., depending on the brand/category, as well as previous models back to 2015).
-      Find their approximate average used market value in INR (Indian Rupees, e.g. 35000, 12000).
+      Act as a strict hardware database. List the 40 most popular specific device models for ${brand} ${category} released since 2015.
+      Group them by product series (e.g., 'S23 Series', 'iPhone 15 Series').
+      Never use generic placeholders like 'Standard' or 'Lite' unless it is part of the official retail name.
+      Find their approximate average direct-to-consumer retail resale value in INR (Indian Rupees, e.g. 35000, 12000).
       
       Respond strictly with a raw JSON array of objects. Do not use markdown blocks, backticks, or extra text.
       Format exactly like this:
@@ -53,7 +98,7 @@ export async function getSingleModelPrice(category: string, brand: string, model
   try {
     const prompt = `
       You are an API for an electronics trade-in platform.
-      Find the approximate average used market value of this specific device in INR (Indian Rupees):
+      Find the approximate average direct-to-consumer retail resale value of this specific device in INR (Indian Rupees):
       Category: ${category}
       Brand: ${brand}
       Model Name: ${modelName}

@@ -10,6 +10,7 @@ import { auth } from '../../config/firebase';
 const links = [
   { label: 'Sell a device', href: '/sell' },
   { label: 'Shop devices', href: '/shop' },
+  { label: 'Repair device', href: '/repair' },
   { label: 'My orders & requests', href: '/profile' },
   { label: 'Why Selltronics', href: '/#why' },
 ];

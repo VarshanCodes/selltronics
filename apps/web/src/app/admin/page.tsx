@@ -1,16 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AdminAddProductForm from "@/components/AdminAddProductForm";
 import AdminBuyOrders from "@/app/components/AdminBuyOrders";
 import AdminSellRequests from "@/app/components/AdminSellRequests";
 import AdminNav from "@/app/components/AdminNav";
 import AdminGate from "@/components/AdminGate";
+import AdminRepairsTable from "@/app/components/AdminRepairsTable";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/firebase";
 
-type TabType = "orders" | "add" | "sellRequests";
+type TabType = "orders" | "add" | "sellRequests" | "repairRequests";
 
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<TabType>("orders");
+  const [repairRequests, setRepairRequests] = useState<any[]>([]);
+
+  const fetchRepairs = async () => {
+    try {
+      const snap = await getDocs(collection(db, "repair_requests"));
+      setRepairRequests(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch (e) {
+      console.error("Could not fetch repair requests:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchRepairs();
+  }, []);
 
   return (
     <AdminGate>
@@ -51,11 +68,12 @@ export default function AdminDashboardPage() {
 
         {/* Navigation Tabs */}
         <div style={{ borderBottom: '1px solid #EFE9FB', marginBottom: '30px', marginTop: '30px' }}>
-          <div style={{ display: 'flex', gap: '30px' }}>
+          <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap' }}>
             {[
               { id: 'orders', label: 'Manage Order Requests' },
               { id: 'add', label: 'Publish New Device' },
               { id: 'sellRequests', label: 'Evaluate User Devices' },
+              { id: 'repairRequests', label: 'Doorstep Repair Requests' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -83,6 +101,7 @@ export default function AdminDashboardPage() {
           {activeTab === "orders" && <AdminBuyOrders />}
           {activeTab === "add" && <AdminAddProductForm />}
           {activeTab === "sellRequests" && <AdminSellRequests />}
+          {activeTab === "repairRequests" && <AdminRepairsTable requests={repairRequests} onRefresh={fetchRepairs} />}
         </div>
       </div>
 
