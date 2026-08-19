@@ -71,6 +71,10 @@ export default function Navbar() {
     };
   }, [open]);
 
+  // Admin pages provide their own dashboard navigation. Avoid rendering the
+  // public storefront header above it.
+  if (pathname.startsWith('/admin')) return null;
+
   const menu = open && typeof document !== 'undefined'
     ? createPortal(
       <div className="site-menu-layer" role="presentation">
