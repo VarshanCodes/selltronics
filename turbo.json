@@ -3,7 +3,8 @@
   "ui": "tui",
   "globalEnv": [
     "FIREBASE_SERVICE_ACCOUNT_JSON",
-    "GEMINI_API_KEY"
+    "GEMINI_API_KEY",
+    "GEMINI_REPAIR_API_KEY"
   ],
   "tasks": {
     "build": {
