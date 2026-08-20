@@ -174,10 +174,10 @@ export default function ProductPage() {
           
           {/* Left: Image Container with Slider */}
           <div className="w-full md:w-1/2 flex flex-col gap-4">
-            <div className="w-full aspect-square bg-[#F3ECFF] rounded-2xl p-8 flex items-center justify-center border border-[#E3D9F9] relative group">
+            <div className="w-full relative group">
               {imagesList.length > 0 ? (
                 <>
-                  <img src={imagesList[activeImageIdx]} alt={product.deviceName} className="max-h-full object-contain" />
+                  <img src={imagesList[activeImageIdx]} alt={product.deviceName} className="block w-full h-auto object-contain" />
                   
                   {imagesList.length > 1 && (
                     <>
@@ -302,7 +302,10 @@ export default function ProductPage() {
                 <h1 className="text-3xl md:text-4xl font-bold text-[#1E1B29] mt-4 mb-2 leading-tight">
                   {product.deviceName}
                 </h1>
-                <p className="text-[#6E6683] mb-6">{product.storage} • {product.specs}</p>
+                <div className="mb-6 space-y-3">
+                  {product.storage && <span className="inline-block rounded-full bg-[#F3ECFF] px-3 py-1.5 text-sm font-extrabold text-[#5B21B6]">Storage: {product.storage}</span>}
+                  {product.specs && <div className="rounded-xl border border-[#E3D9F9] bg-[#FAF7FF] p-4"><h2 className="text-sm font-extrabold uppercase tracking-wide text-[#1E1B29]">Device specifications</h2><p className="mt-2 whitespace-pre-line text-sm font-medium leading-6 text-[#6E6683]">{product.specs}</p></div>}
+                </div>
 
                 <div className="bg-[#FAF7FF] border border-[#E3D9F9] rounded-2xl p-4 sm:p-5 mb-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

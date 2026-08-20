@@ -526,7 +526,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                       setModelsList([]);
                       setStep(3); // Go directly to Brand step
                     }}
-                    className="device-category"
+                    className="device-category repair-category-card"
                     style={{
                       textAlign: 'left',
                       width: '100%',
@@ -543,7 +543,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                     <span className="device-arrow" style={{ display: 'grid', placeItems: 'center' }}>
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                     </span>
-                    <div className="device-drawing">
+                    <div className="device-drawing repair-device-drawing">
                       <img src={item.image} alt={item.name} />
                     </div>
                   </button>
