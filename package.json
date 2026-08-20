@@ -29,7 +29,10 @@
   "allowScripts": {
     "sharp@0.34.5": true,
     "protobufjs@7.6.5": true,
-    "unrs-resolver@1.12.2": true
+    "unrs-resolver@1.12.2": true,
+    "@firebase/util@1.15.1": true,
+    "@firebase/util@1.10.0": true,
+    "@google/genai@2.16.0": true
   },
   "dependencies": {
     "@google/genai": "^2.16.0",
