@@ -80,7 +80,7 @@ export default function Navbar() {
       <div className="site-menu-layer" role="presentation">
         <button className="site-menu-overlay" type="button" onClick={close} aria-label="Close navigation menu" />
         <aside ref={drawerRef} id={drawerId} className="site-drawer" aria-label="Navigation menu" aria-modal="true" role="dialog">
-          <div className="drawer-head"><span className="site-logo"><BrandMark /> <span>Selltronics</span><span className="mobile-powered" aria-label="Powered by Asteroic"><small>Powered by</small><a href="https://www.asteroic.com/" target="_blank" rel="noreferrer"><img src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-02_11-34-44-246.png?updatedAt=1782972404250" alt="Asteroic logo" /><b>asteroic</b></a></span></span><button ref={closeRef} type="button" onClick={close} aria-label="Close navigation menu"><CloseIcon /></button></div>
+          <div className="drawer-head"><span className="site-logo"><BrandMark /> <span>Selltronics</span><span className="mobile-powered" aria-label="Powered by Asteroic"><small>Powered by</small><img src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-02_11-34-44-246.png?updatedAt=1782972404250" alt="" /><b>asteroic</b></span></span><button ref={closeRef} type="button" onClick={close} aria-label="Close navigation menu"><CloseIcon /></button></div>
         <div className="drawer-account">
           <span>{user?.displayName?.slice(0, 1).toUpperCase() || 'G'}</span>
           <div><b>{user?.displayName || 'Guest'}</b><small>{user?.email || 'Sign in during checkout to save your details.'}</small></div>
