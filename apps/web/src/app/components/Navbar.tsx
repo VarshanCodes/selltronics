@@ -80,7 +80,7 @@ export default function Navbar() {
       <div className="site-menu-layer" role="presentation">
         <button className="site-menu-overlay" type="button" onClick={close} aria-label="Close navigation menu" />
         <aside ref={drawerRef} id={drawerId} className="site-drawer" aria-label="Navigation menu" aria-modal="true" role="dialog">
-          <div className="drawer-head"><span className="site-logo"><BrandMark /> <span>Selltronics</span><span className="mobile-powered" aria-label="Powered by Asteroic"><small>Powered by</small><img src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-02_11-34-44-246.png?updatedAt=1782972404250" alt="" /><b>asteroic</b></span></span><button ref={closeRef} type="button" onClick={close} aria-label="Close navigation menu"><CloseIcon /></button></div>
+          <div className="drawer-head"><span className="site-logo"><BrandMark /> <span>Selltronics</span></span><button ref={closeRef} type="button" onClick={close} aria-label="Close navigation menu"><CloseIcon /></button></div>
         <div className="drawer-account">
           <span>{user?.displayName?.slice(0, 1).toUpperCase() || 'G'}</span>
           <div><b>{user?.displayName || 'Guest'}</b><small>{user?.email || 'Sign in during checkout to save your details.'}</small></div>
@@ -99,10 +99,7 @@ export default function Navbar() {
   return <>
     <header className="site-nav">
       <div className="site-nav-inner">
-      <Link href="/" className="site-logo">
-        <BrandMark />
-        <span>Selltronics</span>
-      </Link>
+      <Link href="/" className="site-logo"><BrandMark /> <span>Selltronics</span></Link>
       <nav className="site-nav-links" aria-label="Primary navigation">
         {links.map((link) => <Link key={link.href} href={link.href} className={isActive(link.href) ? 'active' : ''} aria-current={isActive(link.href) ? 'page' : undefined}>{link.label}</Link>)}
       </nav>
