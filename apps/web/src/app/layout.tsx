@@ -1,5 +1,5 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Navbar from "./components/Navbar";
 import Footer from "../components/Footer";
 import BottomMobileNav from "./components/BottomMobileNav";
@@ -7,6 +7,15 @@ import BottomMobileNav from "./components/BottomMobileNav";
 export const metadata: Metadata = {
   title: "SellTronics | Buy & Sell Used Electronics",
   description: "The premium re-commerce platform for your devices.",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  minimumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({

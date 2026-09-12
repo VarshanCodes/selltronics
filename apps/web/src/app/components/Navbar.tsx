@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { useEffect, useId, useRef, useState } from 'react';
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
-import { auth } from '../../config/firebase';
+import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
+import { auth, handleGoogleLogin } from '../../config/firebase';
 
 const links = [
   { label: 'Sell a device', href: '/sell' },
@@ -44,7 +44,7 @@ export default function Navbar() {
     close();
   };
   const signIn = async () => {
-    try { await signInWithPopup(auth, new GoogleAuthProvider()); close(); }
+    try { await handleGoogleLogin(); close(); }
     catch (error) { console.error('Google sign-in failed', error); }
   };
 
@@ -80,7 +80,20 @@ export default function Navbar() {
       <div className="site-menu-layer" role="presentation">
         <button className="site-menu-overlay" type="button" onClick={close} aria-label="Close navigation menu" />
         <aside ref={drawerRef} id={drawerId} className="site-drawer" aria-label="Navigation menu" aria-modal="true" role="dialog">
-          <div className="drawer-head"><span className="site-logo"><BrandMark /> <span>Selltronics</span></span><button ref={closeRef} type="button" onClick={close} aria-label="Close navigation menu"><CloseIcon /></button></div>
+          <div className="drawer-head">
+            <div className="drawer-brand-wrapper">
+              <Link href="/" className="site-logo" onClick={close}>
+                <BrandMark /> <span>Selltronics</span>
+              </Link>
+              <a href="https://www.asteroic.com/" target="_blank" rel="noreferrer" className="drawer-powered" aria-label="Powered by Asteroic">
+                <small>Powered by</small>
+                {/* eslint-disable-next-line @next/next/no-img-element -- external brand image */}
+                <img src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-02_11-34-44-246.png?updatedAt=1782972404250" alt="Asteroic logo" />
+                <b>asteroic</b>
+              </a>
+            </div>
+            <button ref={closeRef} type="button" onClick={close} aria-label="Close navigation menu"><CloseIcon /></button>
+          </div>
         <div className="drawer-account">
           <span>{user?.displayName?.slice(0, 1).toUpperCase() || 'G'}</span>
           <div><b>{user?.displayName || 'Guest'}</b><small>{user?.email || 'Sign in during checkout to save your details.'}</small></div>
@@ -99,7 +112,11 @@ export default function Navbar() {
   return <>
     <header className="site-nav">
       <div className="site-nav-inner">
-      <Link href="/" className="site-logo"><BrandMark /> <span>Selltronics</span></Link>
+      <div className="header-brand-wrapper">
+        <Link href="/" className="site-logo">
+          <BrandMark /> <span>Selltronics</span>
+        </Link>
+      </div>
       <nav className="site-nav-links" aria-label="Primary navigation">
         {links.map((link) => <Link key={link.href} href={link.href} className={isActive(link.href) ? 'active' : ''} aria-current={isActive(link.href) ? 'page' : undefined}>{link.label}</Link>)}
       </nav>

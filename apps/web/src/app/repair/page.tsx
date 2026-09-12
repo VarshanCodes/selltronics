@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithPopup, User, onAuthStateChanged } from 'firebase/auth';
-import { auth, db } from '@/config/firebase';
+import { User, onAuthStateChanged } from 'firebase/auth';
+import { auth, db, handleGoogleLogin } from '@/config/firebase';
 import { getRepairDeviceModels } from '@/app/actions/repairEngine';
 
 type RepairStep = 1 | 2 | 3 | 4 | 5 | 6;
@@ -324,8 +324,8 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
 
   const handleSignIn = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      const result = await handleGoogleLogin();
+      if (!result?.user) return;
       setCurrentUser(result.user);
       setCustomerInfo((prev) => ({
         ...prev,

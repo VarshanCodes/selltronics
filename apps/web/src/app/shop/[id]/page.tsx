@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc, addDoc, collection, serverTimestamp, setDoc } from "firebase/firestore";
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, type User } from "firebase/auth";
+import { onAuthStateChanged, type User } from "firebase/auth";
 import Link from "next/link";
-import { db } from "../../../config/firebase";
-import { auth } from "../../../config/firebase";
+import { auth, db, handleGoogleLogin } from "../../../config/firebase";
+
 
 interface ProductDetails {
   id: string;
@@ -57,7 +57,7 @@ export default function ProductPage() {
 
   const signInWithGoogle = async () => {
     setSigningIn(true);
-    try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+    try { await handleGoogleLogin(); }
     catch (error) { console.error('Google sign-in failed:', error); alert('Google sign-in could not be completed. Please try again.'); }
     finally { setSigningIn(false); }
   };

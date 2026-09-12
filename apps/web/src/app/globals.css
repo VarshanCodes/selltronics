@@ -33,6 +33,18 @@ body {
   color: var(--ink);
   background: var(--white);
   -webkit-font-smoothing: antialiased;
+  user-select: none; /* Prevents text highlighting */
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* Disables the long-press popup menu */
+  overscroll-behavior-y: none; /* Stops the pull-to-refresh screen bounce */
+  touch-action: manipulation; /* Removes the 300ms delay on button taps */
+  -webkit-tap-highlight-color: transparent; /* Removes the blue tap flash */
+}
+
+/* Allow text selection in form inputs and editable areas */
+input, textarea, [contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 body.menu-open { overflow: hidden; touch-action: none; }
@@ -611,4 +623,96 @@ nav.links a:hover {
 .nav-dropdown a:hover {
   background: var(--lavender-50);
   color: var(--violet-700) !important;
+}
+
+/* Asteroic Powered Branding Styles */
+.header-brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-powered {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  color: var(--gray);
+  font-size: 0.72rem;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.header-powered:hover {
+  opacity: 0.85;
+}
+
+.header-powered img {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.header-powered b {
+  color: var(--ink);
+  font-weight: 750;
+  font-size: 0.8rem;
+  letter-spacing: -0.01em;
+}
+
+.drawer-brand-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.drawer-powered {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  color: var(--gray);
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.drawer-powered img {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.drawer-powered b {
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 580px) {
+  .header-brand-wrapper {
+    gap: 8px;
+  }
+  .header-powered {
+    font-size: 0.65rem;
+  }
+  .header-powered b {
+    font-size: 0.72rem;
+  }
+  .header-powered img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 375px) {
+  .header-powered small {
+    display: none;
+  }
 }

@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { collection, doc, onSnapshot, query, updateDoc, where, type Timestamp } from 'firebase/firestore';
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
-import { auth, db } from '@/config/firebase';
+import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
+import { auth, db, handleGoogleLogin } from '@/config/firebase';
 
 type Kind = 'orders' | 'sell_requests' | 'repair_requests';
 type Request = {
@@ -87,7 +87,7 @@ export default function ProfilePage() {
   const cards = (items: Request[], kind: Kind) => items.length ? <div className="mt-4 grid gap-4">{items.map((item) => <article key={item.id} className="rounded-2xl border border-[#E3D9F9] bg-white p-5 shadow-sm"><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-bold text-[#1E1B29]">{title(item, kind)}</h3><p className="mt-1 text-sm text-[#6E6683]">Request #{item.id.slice(0, 8)} · {when(item)} · {subtitle(item, kind)}</p></div><span className="rounded-full bg-[#FEF3C7] px-3 py-1 text-xs font-bold text-[#92400E]">{(item.status || 'Pending').replaceAll('_', ' ')}</span></div><div className="mt-4 flex flex-wrap gap-3"><Link href={kind === 'orders' ? `/track-purchase?order=${item.id}` : `/track?order=${item.id}`} className="rounded-lg border border-[#D8C8F6] px-3 py-2 text-sm font-bold text-[#5B21B6]">View details</Link>{editable(item) && <><button onClick={() => setEditing({ kind, request: { ...item } })} className="rounded-lg border border-[#D8C8F6] px-3 py-2 text-sm font-bold text-[#5B21B6]">Edit request</button><button onClick={() => cancel(kind, item.id)} className="rounded-lg border border-red-200 px-3 py-2 text-sm font-bold text-red-700">Cancel request</button></>}</div></article>)}</div> : <div className="mt-4 rounded-2xl border border-dashed border-[#E3D9F9] bg-[#FAF7FF] p-6 text-sm font-semibold text-[#6E6683]">No active {kind === 'repair_requests' ? 'repair' : kind === 'orders' ? 'order' : 'sell'} requests.</div>;
 
   if (loading) return <main className="grid min-h-[60vh] place-items-center text-[#5B21B6]"><span className="animate-pulse font-bold">Loading your profile…</span></main>;
-  if (!user) return <main className="mx-auto my-16 max-w-md rounded-3xl border border-[#E3D9F9] bg-white p-8 text-center shadow-sm"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#F3ECFF] text-xl">G</div><h1 className="mt-4 text-2xl font-black text-[#1E1B29]">Your Profile</h1><p className="mt-2 text-[#6E6683]">Sign in to manage your sell, order, and repair requests.</p><button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="mt-6 rounded-xl bg-[#5B21B6] px-5 py-3 font-bold text-white shadow-sm transition hover:bg-[#6D28D9]">Continue with Google</button></main>;
+  if (!user) return <main className="mx-auto my-16 max-w-md rounded-3xl border border-[#E3D9F9] bg-white p-8 text-center shadow-sm"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#F3ECFF] text-xl">G</div><h1 className="mt-4 text-2xl font-black text-[#1E1B29]">Your Profile</h1><p className="mt-2 text-[#6E6683]">Sign in to manage your sell, order, and repair requests.</p><button onClick={() => handleGoogleLogin()} className="mt-6 rounded-xl bg-[#5B21B6] px-5 py-3 font-bold text-white shadow-sm transition hover:bg-[#6D28D9]">Continue with Google</button></main>;
 
   const repairEdit = editing?.kind === 'repair_requests';
   const editAddress = editing?.kind === 'orders' ? editing.request.deliveryAddress : repairEdit ? editing?.request.customerAddress : editing?.request.locationAddress;

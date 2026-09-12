@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { addDoc, collection, doc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
-import { auth, db } from '../config/firebase';
+import { User } from 'firebase/auth';
+import { auth, db, handleGoogleLogin } from '../config/firebase';
 import { getLiveModelsAndPrices, getSingleModelPrice } from '@/app/actions/pricingEngine';
 
 type DeviceType = 'Smartphones' | 'Laptops' | 'Tablets' | 'Mac' | 'Other devices';
@@ -947,7 +947,8 @@ export default function SellDeviceForm() {
 
   const signInWithGoogle = async () => {
     try {
-      const result = await signInWithPopup(auth, new GoogleAuthProvider());
+      const result = await handleGoogleLogin();
+      if (!result?.user) return;
       setCurrentUser(result.user);
       setForm((current) => ({ ...current, userName: result.user.displayName || current.userName, customerEmail: result.user.email || current.customerEmail }));
       setStep(8);

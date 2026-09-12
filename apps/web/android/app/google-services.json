@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "552424549072",
+    "firebase_url": "https://selltronics-74f3a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "selltronics-74f3a",
+    "storage_bucket": "selltronics-74f3a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:552424549072:android:6af35e2665051e30ae0cd5",
+        "android_client_info": {
+          "package_name": "com.selltronics.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "552424549072-r5nicqp0jmmdj4rbu9m0ql7se04k67ba.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.selltronics.app",
+            "certificate_hash": "2f54c3191c5d1a4ad1f23fca3a0eaccefca0bb75"
+          }
+        },
+        {
+          "client_id": "552424549072-2m5ibcahng6e94dlumjvhaq7vvjrr862.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNb83T4Oa36o4mFdd-yRu7919Im8p73f0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "552424549072-2m5ibcahng6e94dlumjvhaq7vvjrr862.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

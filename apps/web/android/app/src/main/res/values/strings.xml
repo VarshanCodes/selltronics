@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SellTronics</string>
+    <string name="title_activity_main">SellTronics</string>
+    <string name="package_name">com.selltronics.app</string>
+    <string name="custom_url_scheme">com.selltronics.app</string>
+</resources>
