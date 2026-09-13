@@ -44,8 +44,15 @@ export default function Navbar() {
     close();
   };
   const signIn = async () => {
-    try { await handleGoogleLogin(); close(); }
-    catch (error) { console.error('Google sign-in failed', error); }
+    try {
+      await handleGoogleLogin();
+      close();
+    } catch (error: any) {
+      console.error('Google sign-in failed', error);
+      if (!(error as any)?._alerted) {
+        alert(JSON.stringify(error));
+      }
+    }
   };
 
   useEffect(() => {

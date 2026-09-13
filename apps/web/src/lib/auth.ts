@@ -10,16 +10,8 @@ export const handleGoogleLogin = async (): Promise<UserCredential | undefined> =
   try {
     if (isNative) {
       console.log('[Auth] Triggering native FirebaseAuthentication.signInWithGoogle()...');
-
-      let result;
-      try {
-        result = await FirebaseAuthentication.signInWithGoogle();
-        console.log('[Auth] Native signInWithGoogle response:', JSON.stringify(result));
-      } catch (nativeErr: any) {
-        console.warn('[Auth] Primary signInWithGoogle attempt threw an error, trying legacy fallback mode:', nativeErr);
-        result = await FirebaseAuthentication.signInWithGoogle({ useCredentialManager: false });
-        console.log('[Auth] Legacy signInWithGoogle response:', JSON.stringify(result));
-      }
+      const result = await FirebaseAuthentication.signInWithGoogle();
+      console.log('[Auth] Native signInWithGoogle response:', JSON.stringify(result));
 
       const idToken = result?.credential?.idToken;
       console.log('[Auth] Native ID Token exists:', Boolean(idToken));
@@ -45,6 +37,21 @@ export const handleGoogleLogin = async (): Promise<UserCredential | undefined> =
     console.error('[Auth] Error message:', error?.message || error);
     console.error('[Auth] Error code:', error?.code);
     console.error('[Auth] Error stack:', error?.stack);
+
+    // Force any hidden native bridge rejections (DEVELOPER_ERROR, API_EXCEPTION, etc.) to pop up physically on Android
+    if (typeof window !== 'undefined' && !(error as any)?._alerted) {
+      (error as any)._alerted = true;
+      try {
+        const serialized = JSON.stringify(error);
+        if (serialized && serialized !== '{}') {
+          alert(serialized);
+        } else {
+          alert(JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+        }
+      } catch {
+        alert(JSON.stringify(error));
+      }
+    }
     throw error;
   }
 };
