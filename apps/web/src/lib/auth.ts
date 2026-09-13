@@ -4,16 +4,23 @@ import { GoogleAuthProvider, signInWithCredential, signInWithPopup, type UserCre
 import { auth } from '@/config/firebase';
 
 export const handleGoogleLogin = async (): Promise<UserCredential | undefined> => {
-  const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform();
+  // Enhanced native detection for remote URL hosting environments where Capactor platform string inside the web bundle might default to 'web'.
+  const isNative = typeof window !== 'undefined' && (
+    Capacitor.isNativePlatform() ||
+    !!(window as any).Capacitor ||
+    (window as any).Capacitor?.isNative === true ||
+    navigator.userAgent.includes('Capacitor')
+  );
   console.log('[Auth] handleGoogleLogin invoked. isNative:', isNative, 'platform:', Capacitor.getPlatform());
 
   // 1. STRICT NATIVE-ONLY FLOW FOR MOBILE (Android / iOS)
-  // When running natively, directly execute the native plugin. Deep linking back from a browser tab is not configured.
   if (isNative) {
     console.log('[Auth] Native platform detected: directly executing FirebaseAuthentication.signInWithGoogle()...');
 
     try {
-      const result = await FirebaseAuthentication.signInWithGoogle();
+      const result = await FirebaseAuthentication.signInWithGoogle({
+        webClientId: '552424549072-2m5ibcahng6e94dlumjvhaq7vvjrr862.apps.googleusercontent.com'
+      });
       console.log('[Auth] Native signInWithGoogle response:', JSON.stringify(result));
 
       const idToken = result?.credential?.idToken;
