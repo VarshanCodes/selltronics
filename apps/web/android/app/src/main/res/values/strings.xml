@@ -4,4 +4,5 @@
     <string name="title_activity_main">SellTronics</string>
     <string name="package_name">com.selltronics.app</string>
     <string name="custom_url_scheme">com.selltronics.app</string>
+    <string name="default_web_client_id">552424549072-2m5ibcahng6e94dlumjvhaq7vvjrr862.apps.googleusercontent.com</string>
 </resources>

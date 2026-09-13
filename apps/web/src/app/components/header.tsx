@@ -9,7 +9,7 @@ export default function Header() {
   return (
     <>
       {/* Sticky Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-white/92 backdrop-blur-md border-b border-[#EFE9FB]">
+      <header className="sticky top-0 z-50 bg-white border-b border-[#EFE9FB] pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-[1180px] mx-auto flex items-center justify-between px-6 py-3.5">
           
           {/* Logo */}

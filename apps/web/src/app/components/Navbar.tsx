@@ -110,7 +110,7 @@ export default function Navbar() {
     : null;
 
   return <>
-    <header className="site-nav">
+    <header className="site-nav bg-white">
       <div className="site-nav-inner">
       <div className="header-brand-wrapper">
         <Link href="/" className="site-logo">
