@@ -49,9 +49,6 @@ export default function Navbar() {
       close();
     } catch (error: any) {
       console.error('Google sign-in failed', error);
-      if (!(error as any)?._alerted) {
-        alert(JSON.stringify(error));
-      }
     }
   };
 

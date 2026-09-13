@@ -8,18 +8,11 @@ export const handleGoogleLogin = async (): Promise<UserCredential | undefined> =
   console.log('[Auth] handleGoogleLogin invoked. isNative:', isNative, 'platform:', Capacitor.getPlatform());
 
   // 1. STRICT NATIVE-ONLY FLOW FOR MOBILE (Android / iOS)
-  // Deep linking back from a browser tab is not configured, so NEVER fall back to web popup/redirect.
+  // When running natively, directly execute the native plugin. Deep linking back from a browser tab is not configured.
   if (isNative) {
-    console.log('[Auth] Native platform detected: strictly enforcing FirebaseAuthentication.signInWithGoogle()...');
+    console.log('[Auth] Native platform detected: directly executing FirebaseAuthentication.signInWithGoogle()...');
 
     try {
-      if (!Capacitor.isPluginAvailable('FirebaseAuthentication')) {
-        throw new Error(
-          'FirebaseAuthentication plugin is missing or not registered in this Android build. ' +
-          'Please rebuild and install the Android app from Android Studio after running "npx cap sync android".'
-        );
-      }
-
       const result = await FirebaseAuthentication.signInWithGoogle();
       console.log('[Auth] Native signInWithGoogle response:', JSON.stringify(result));
 
@@ -36,15 +29,12 @@ export const handleGoogleLogin = async (): Promise<UserCredential | undefined> =
       console.log('[Auth] Firebase web session successfully established for:', userCredential.user.email);
       return userCredential;
     } catch (error: any) {
-      console.error('[Auth] Native Google Sign-In failed:', error);
-      const errorMsg = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+      console.error('[Auth] Native Google Sign-In failed with exception:', error);
+      console.error('[Auth] Error message:', error?.message || error);
+      console.error('[Auth] Error code:', error?.code);
+      console.error('[Auth] Error stack:', error?.stack);
 
-      if (typeof window !== 'undefined') {
-        (error as any)._alerted = true;
-        alert('Google Sign-In Failed:\n' + errorMsg);
-      }
-
-      // Strictly reject: do NOT attempt any web browser fallback on native
+      // Re-throw without attempting any web browser fallback on native
       throw error;
     }
   }
