@@ -4,57 +4,57 @@ import { GoogleAuthProvider, signInWithCredential, signInWithPopup, type UserCre
 import { auth } from '@/config/firebase';
 
 export const handleGoogleLogin = async (): Promise<UserCredential | undefined> => {
-  // Enhanced native detection for remote URL hosting environments where Capactor platform string inside the web bundle might default to 'web'.
+  // Check if inside a native webview container or running within native context
   const isNative = typeof window !== 'undefined' && (
     Capacitor.isNativePlatform() ||
     !!(window as any).Capacitor ||
     (window as any).Capacitor?.isNative === true ||
-    navigator.userAgent.includes('Capacitor')
+    navigator.userAgent.includes('Capacitor') ||
+    window.location.href.includes('capacitor://')
   );
-  console.log('[Auth] handleGoogleLogin invoked. isNative:', isNative, 'platform:', Capacitor.getPlatform());
 
-  // 1. STRICT NATIVE-ONLY FLOW FOR MOBILE (Android / iOS)
+  console.log('[Auth] handleGoogleLogin invoked. isNative:', isNative, 'platform:', Capacitor.getPlatform(), 'URL:', typeof window !== 'undefined' ? window.location.href : 'SSR');
+
   if (isNative) {
-    console.log('[Auth] Native platform detected: directly executing FirebaseAuthentication.signInWithGoogle()...');
-
+    console.log('[Auth] Native container match: executing native plugin sign-in with Google parameter options...');
     try {
       const result = await FirebaseAuthentication.signInWithGoogle({
         webClientId: '552424549072-2m5ibcahng6e94dlumjvhaq7vvjrr862.apps.googleusercontent.com'
       });
-      console.log('[Auth] Native signInWithGoogle response:', JSON.stringify(result));
+      console.log('[Auth] Native plugin result payload token parsing...');
 
-      const idToken = result?.credential?.idToken;
-      console.log('[Auth] Native ID Token exists:', Boolean(idToken));
-
+      // Handle both standard capawesome plugin structures or credential token options fallback
+      const idToken = result?.credential?.idToken || (result as any)?.idToken;
       if (!idToken) {
-        throw new Error('Native Google Sign-In succeeded, but no ID token was returned.');
+        throw new Error('Google native provider authentication returned an empty validation ID token token.');
       }
 
-      console.log('[Auth] Creating GoogleAuthProvider credential from native ID token...');
       const credential = GoogleAuthProvider.credential(idToken);
       const userCredential = await signInWithCredential(auth, credential);
-      console.log('[Auth] Firebase web session successfully established for:', userCredential.user.email);
       return userCredential;
     } catch (error: any) {
-      console.error('[Auth] Native Google Sign-In failed with exception:', error);
-      console.error('[Auth] Error message:', error?.message || error);
-      console.error('[Auth] Error code:', error?.code);
-      console.error('[Auth] Error stack:', error?.stack);
+      console.error('[Auth] Native transaction intercept failure handler:', error);
 
-      // Re-throw without attempting any web browser fallback on native
-      throw error;
+      // If native plugin initialization throws because of a mismatch with the remote web domain view context shell wrapper, fallback safely to standard explicit redirection flow parameters
+      try {
+        console.log('[Auth] Attempting alternate explicit redirect federated sign-in fallback chain...');
+        const provider = new GoogleAuthProvider();
+        const userCredential = await signInWithPopup(auth, provider);
+        return userCredential;
+      } catch (innerErr) {
+        console.error('[Auth] Alternate fallback authentication chain error payload:', innerErr);
+        throw error;
+      }
     }
   }
 
-  // 2. STANDARD DESKTOP / MOBILE WEB BROWSER FLOW ONLY
+  // Standard web browser fallback
   try {
-    console.log('[Auth] Standard browser detected: executing web signInWithPopup...');
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
-    console.log('[Auth] Web signInWithPopup completed for:', userCredential.user.email);
     return userCredential;
   } catch (error: any) {
-    console.error('[Auth] Web Google Sign-In failed:', error);
+    console.error('[Auth] Web fallback authorization error context:', error);
     throw error;
   }
 };
