@@ -114,7 +114,7 @@ export default function Navbar() {
     : null;
 
   return <>
-    <header className="site-nav bg-white">
+    <header className="site-nav bg-white" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="site-nav-inner">
       <div className="header-brand-wrapper">
         <Link href="/" className="site-logo">

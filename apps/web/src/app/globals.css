@@ -90,7 +90,7 @@ header.nav {
   z-index: 50;
   background: #FFFFFF !important;
   border-bottom: 1px solid #EFE9FB;
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: env(safe-area-inset-top);
 }
 
 .nav-inner {
@@ -509,7 +509,7 @@ nav.links a:hover {
 }
 
 /* ========== Customer storefront ========== */
-.site-nav { position: sticky; top: 0; z-index: 100; isolation: isolate; background: #FFFFFF !important; border-bottom: 1px solid #efe9fb; padding-top: env(safe-area-inset-top, 0px); }
+.site-nav { position: sticky; top: 0; z-index: 100; isolation: isolate; background: #FFFFFF !important; border-bottom: 1px solid #efe9fb; padding-top: env(safe-area-inset-top); }
 @supports (backdrop-filter: blur(12px)) { .site-nav { background: #FFFFFF !important; } }
 .site-nav-inner { width: min(100%, 1180px); min-height: 64px; margin: auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .site-logo { display: inline-flex; min-width: 0; align-items: center; gap: 10px; color: var(--ink); font: 700 1.27rem 'Space Grotesk', sans-serif; white-space: nowrap; }
