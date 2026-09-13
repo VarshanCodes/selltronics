@@ -18,9 +18,7 @@ export const handleGoogleLogin = async (): Promise<UserCredential | undefined> =
   if (isNative) {
     console.log('[Auth] Native container match: executing native plugin sign-in with Google parameter options...');
     try {
-      const result = await FirebaseAuthentication.signInWithGoogle({
-        webClientId: '552424549072-2m5ibcahng6e94dlumjvhaq7vvjrr862.apps.googleusercontent.com'
-      });
+      const result = await FirebaseAuthentication.signInWithGoogle();
       console.log('[Auth] Native plugin result payload token parsing...');
 
       // Handle both standard capawesome plugin structures or credential token options fallback
