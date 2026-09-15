@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { addDoc, collection, doc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore';
 import { User } from 'firebase/auth';
@@ -831,8 +831,22 @@ export default function SellDeviceForm() {
     return () => clearTimeout(timer);
   }, [form.deviceName, form.brand, form.deviceType, aiDeviceList]);
 
-  // Pricing engine helpers
-  const getStorageMultiplier = (storageStr: string): number => {
+  // Memoize large fallback dataset lookups and current available models
+  const availableModels = useMemo(() => {
+    if (!form.brand || !form.deviceType) return [];
+    if (aiDeviceList.length > 0) return aiDeviceList;
+    return getFallbackModels(form.deviceType, form.brand);
+  }, [aiDeviceList, form.deviceType, form.brand]);
+
+  // Memoize search/filter query on available models to prevent re-filtering on unrelated re-renders
+  const filteredModels = useMemo(() => {
+    if (!form.deviceName.trim()) return availableModels;
+    const query = form.deviceName.toLowerCase();
+    return availableModels.filter((item) => item.model.toLowerCase().includes(query));
+  }, [availableModels, form.deviceName]);
+
+  // Pricing engine helpers (memoized)
+  const getStorageMultiplier = useCallback((storageStr: string): number => {
     if (!storageStr) return 1.0;
     const clean = storageStr.replace(/\s+/g, '').toUpperCase();
     if (clean.includes('32GB')) return 0.75;
@@ -843,9 +857,9 @@ export default function SellDeviceForm() {
     if (clean.includes('1TB')) return 1.45;
     if (clean.includes('2TB')) return 1.60;
     return 1.0;
-  };
+  }, []);
 
-  const getConditionMultiplier = (): { conditionName: string; multiplier: number } => {
+  const conditionMultiplier = useMemo((): { conditionName: string; multiplier: number } => {
     const answers = form.conditionAnswers;
     const isCriticalBroken = 
       answers.powersOn === 'No' || 
@@ -877,10 +891,10 @@ export default function SellDeviceForm() {
     }
     
     return { conditionName: 'Flawless', multiplier: 1.60 };
-  };
+  }, [form.conditionAnswers, form.defects, form.problems]);
 
-  const calculateEstimatedPriceRange = (): { min: number; max: number } => {
-    const activeDevice = aiDeviceList.find(d => d.model.toLowerCase() === form.deviceName.toLowerCase());
+  const priceRange = useMemo((): { min: number; max: number } => {
+    const activeDevice = aiDeviceList.find((d) => d.model.toLowerCase() === form.deviceName.toLowerCase());
     let basePrice = 0;
     
     if (activeDevice) {
@@ -896,7 +910,7 @@ export default function SellDeviceForm() {
       }
     }
     
-    const condMultiplier = getConditionMultiplier().multiplier;
+    const condMultiplier = conditionMultiplier.multiplier;
     const storMultiplier = getStorageMultiplier(form.storage);
     const exactValue = basePrice * condMultiplier * storMultiplier;
     
@@ -904,16 +918,22 @@ export default function SellDeviceForm() {
       min: Math.floor(exactValue * 0.90),
       max: Math.ceil(exactValue * 1.10)
     };
-  };
+  }, [aiDeviceList, customModelPrice, form.deviceName, conditionMultiplier, form.storage, getStorageMultiplier]);
 
-  const priceRange = calculateEstimatedPriceRange();
+  const update = useCallback((field: keyof typeof form, value: any) => {
+    setForm((current) => ({ ...current, [field]: value }));
+  }, []);
 
-  // Estimation prefill logic removed
-
-  const update = (field: keyof typeof form, value: any) => setForm((current) => ({ ...current, [field]: value }));
-  const toggle = (field: 'defects' | 'problems' | 'accessories', value: string) => setForm((current) => ({ ...current, [field]: current[field].includes(value) ? current[field].filter((item) => item !== value) : [...current[field], value] }));
+  const toggle = useCallback((field: 'defects' | 'problems' | 'accessories', value: string) => {
+    setForm((current) => ({
+      ...current,
+      [field]: current[field].includes(value)
+        ? current[field].filter((item) => item !== value)
+        : [...current[field], value]
+    }));
+  }, []);
   
-  const goBack = () => {
+  const goBack = useCallback(() => {
     setStep((current) => {
       if (current === 8) {
         if (currentUser) {
@@ -924,9 +944,9 @@ export default function SellDeviceForm() {
       }
       return Math.max(1, current - 1) as Step;
     });
-  };
+  }, [currentUser]);
   
-  const goNext = () => {
+  const goNext = useCallback(() => {
     setStep((current) => {
       if (current === 6) {
         if (currentUser) {
@@ -937,7 +957,7 @@ export default function SellDeviceForm() {
       }
       return Math.min(8, current + 1) as Step;
     });
-  };
+  }, [currentUser]);
 
   const canContinue =
     step === 1 ? Boolean(form.brand) :
@@ -1105,8 +1125,8 @@ export default function SellDeviceForm() {
 
     {step === 1 && <div style={{ marginTop: 22 }}>
       <div className="sell-benefits" style={{ justifyContent: 'flex-start', marginTop: 0, marginBottom: 22 }}>{benefits.map((item) => <span key={item}>{item}</span>)}</div>
-      <div className="field"><span>{currentCopy.brandLabel}</span><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(118px, 1fr))', gap: 10, marginTop: 8 }}>
-        {((showAllBrands || currentCopy.brands.length <= 4) ? currentCopy.brands : currentCopy.brands.slice(0, 4)).map((item) => <button key={item.name} type="button" onClick={() => update('brand', item.name)} style={{ minHeight: 74, padding: '10px 9px', border: form.brand === item.name ? '2px solid var(--violet-700)' : '1px solid #E3D9F9', borderRadius: 12, background: form.brand === item.name ? 'var(--lavender-100)' : '#fff', display: 'grid', placeItems: 'center', gap: 6, fontWeight: 700, cursor: 'pointer' }}>{item.logo ? (
+      <div className="field w-full shrink-0"><span>{currentCopy.brandLabel}</span><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(118px, 1fr))', gap: 10, marginTop: 8 }}>
+        {((showAllBrands || currentCopy.brands.length <= 4) ? currentCopy.brands : currentCopy.brands.slice(0, 4)).map((item) => <button key={item.name} type="button" onClick={() => update('brand', item.name)} style={{ minHeight: 74, padding: '10px 9px', border: '1.5px solid ' + (form.brand === item.name ? 'var(--violet-700)' : '#E3D9F9'), boxShadow: form.brand === item.name ? '0 0 0 2px rgba(124, 58, 237, 0.25)' : 'none', boxSizing: 'border-box', borderRadius: 12, background: form.brand === item.name ? 'var(--lavender-100)' : '#fff', display: 'grid', placeItems: 'center', gap: 6, fontWeight: 700, cursor: 'pointer' }}>{item.logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={item.logo} alt="" width="24" height="24" />
       ) : <b>{item.mark}</b>}<span style={{ margin: 0 }}>{item.name}</span></button>)}
@@ -1117,9 +1137,10 @@ export default function SellDeviceForm() {
             style={{
               minHeight: 74,
               padding: '10px 9px',
-              border: '1px dashed var(--violet-700)',
+              border: '1.5px dashed var(--violet-700)',
               borderRadius: 12,
               background: '#fff',
+              boxSizing: 'border-box',
               display: 'grid',
               placeItems: 'center',
               fontWeight: 700,
@@ -1134,13 +1155,15 @@ export default function SellDeviceForm() {
     </div>}
 
     {step === 2 && <div className="sell-form-grid">
-      <div className="field" style={{ position: 'relative' }}>
-        <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink)' }}>
-          {currentCopy.modelLabel}
-          {isAiLoading && <small style={{ color: 'var(--violet-700)', fontWeight: 600 }}>Preloading models...</small>}
-        </span>
-        <div style={{ position: 'relative', marginTop: '8px' }}>
+      {/* 1. Phone / Device Model Name */}
+      <div className="sell-field-group">
+        <label htmlFor="sell-device-name" className="sell-field-label">
+          <span>{currentCopy.modelLabel}</span>
+          {isAiLoading && <small className="sell-field-hint">Finding models...</small>}
+        </label>
+        <div className="sell-input-wrapper">
           <input 
+            id="sell-device-name"
             required 
             value={form.deviceName} 
             onChange={(e) => {
@@ -1152,78 +1175,101 @@ export default function SellDeviceForm() {
               setTimeout(() => setShowDropdown(false), 200);
             }}
             placeholder={currentCopy.modelPlaceholder} 
-            style={{ width: '100%' }}
+            className="sell-input"
+            autoComplete="off"
           />
           {showDropdown && (
-            <ul style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              zIndex: 1000,
-              background: '#fff',
-              border: '1.5px solid #E3D9F9',
-              borderRadius: '12px',
-              maxHeight: '220px',
-              overflowY: 'auto',
-              margin: '4px 0 0 0',
-              padding: '6px 0',
-              listStyle: 'none',
-              boxShadow: '0 8px 24px rgba(99, 102, 241, 0.1)'
-            }}>
-              {(() => {
-                const displayModels = aiDeviceList.length > 0 ? aiDeviceList : getFallbackModels(form.deviceType, form.brand);
-                const filtered = displayModels.filter(item => 
-                  item.model.toLowerCase().includes(form.deviceName.toLowerCase())
-                );
-                
-                if (filtered.length === 0) {
-                  return (
-                    <li style={{ padding: '10px 16px', fontSize: '0.88rem', color: '#6E6683', fontStyle: 'italic' }}>
-                      No matching models. Press tab/continue to use your typed model.
-                    </li>
-                  );
-                }
-
-                return filtered.map((item, idx) => (
+            <ul className="sell-dropdown-menu">
+              {filteredModels.length === 0 ? (
+                <li style={{ padding: '10px 16px', fontSize: '0.88rem', color: '#6E6683', fontStyle: 'italic' }}>
+                  No matching models. Press tab/continue to use your typed model.
+                </li>
+              ) : (
+                filteredModels.slice(0, 15).map((item, idx) => (
                   <li 
                     key={idx}
                     onMouseDown={() => {
                       update('deviceName', item.model);
                       setShowDropdown(false);
                     }}
+                    className="sell-dropdown-item"
                     style={{
-                      padding: '10px 16px',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem',
-                      color: 'var(--ink)',
-                      fontWeight: 500,
-                      borderBottom: idx < filtered.length - 1 ? '1px solid #FAF7FF' : 'none',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'var(--lavender-100)';
-                      e.currentTarget.style.color = 'var(--violet-700)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = 'var(--ink)';
+                      borderBottom: idx < Math.min(filteredModels.length, 15) - 1 ? '1px solid #FAF7FF' : 'none',
                     }}
                   >
                     <span>{item.model}</span>
                     <small style={{ color: '#9CA3AF', fontSize: '0.75rem' }}>Popular suggestion</small>
                   </li>
-                ));
-              })()}
+                ))
+              )}
             </ul>
           )}
         </div>
       </div>
-      <label className="field"><span>Storage</span><select required value={form.storage} onChange={(e) => update('storage', e.target.value)}><option value="">Choose storage</option>{currentCopy.storageOptions.map((option) => <option key={option}>{option}</option>)}</select></label>
-      <label className="field"><span>RAM</span><select required value={form.ram} onChange={(e) => update('ram', e.target.value)}><option value="">Choose RAM</option>{currentCopy.ramOptions.map((option) => <option key={option}>{option}</option>)}</select></label>
-      <label className="field"><span>{currentCopy.specLabel}</span><input value={form.specs} onChange={(e) => update('specs', e.target.value)} placeholder={currentCopy.specPlaceholder} /></label>
+
+      {/* 2. Storage */}
+      <div className="sell-field-group">
+        <label htmlFor="sell-device-storage" className="sell-field-label">
+          <span>Storage</span>
+        </label>
+        <div className="sell-select-wrapper">
+          <select 
+            id="sell-device-storage"
+            required 
+            value={form.storage} 
+            onChange={(e) => update('storage', e.target.value)} 
+            className="sell-input sell-select"
+          >
+            <option value="">Choose storage</option>
+            {currentCopy.storageOptions.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <div className="sell-select-icon" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. RAM */}
+      <div className="sell-field-group">
+        <label htmlFor="sell-device-ram" className="sell-field-label">
+          <span>RAM</span>
+        </label>
+        <div className="sell-select-wrapper">
+          <select 
+            id="sell-device-ram"
+            required 
+            value={form.ram} 
+            onChange={(e) => update('ram', e.target.value)} 
+            className="sell-input sell-select"
+          >
+            <option value="">Choose RAM</option>
+            {currentCopy.ramOptions.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <div className="sell-select-icon" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Variant or extra detail */}
+      <div className="sell-field-group">
+        <label htmlFor="sell-device-specs" className="sell-field-label">
+          <span>{currentCopy.specLabel}</span>
+        </label>
+        <div className="sell-input-wrapper">
+          <input 
+            id="sell-device-specs"
+            value={form.specs} 
+            onChange={(e) => update('specs', e.target.value)} 
+            placeholder={currentCopy.specPlaceholder} 
+            className="sell-input" 
+          />
+        </div>
+      </div>
     </div>}
 
     {step === 3 && <div style={{ marginTop: 22 }}>{currentQuestions.map(([key, title, hint]) => <div className="field" key={key} style={{ marginBottom: 18 }}><span>{title}</span><small>{hint}</small><div style={{ display: 'flex', gap: 10, marginTop: 8 }}>{['Yes', 'No'].map((answer) => <button type="button" key={answer} onClick={() => setForm((current) => ({ ...current, conditionAnswers: { ...current.conditionAnswers, [key]: answer } }))} className={form.conditionAnswers[key] === answer ? 'btn-primary' : 'btn-ghost'}>{answer}</button>)}</div></div>)}</div>}
@@ -1341,20 +1387,60 @@ export default function SellDeviceForm() {
           placeholder="Enter expected amount" 
           value={expectedPrice} 
           onChange={(e) => setExpectedPrice(e.target.value)}
-          className="text-3xl text-center font-bold p-4 border-2 border-blue-500 rounded-xl w-full"
+          className="text-3xl text-center font-bold p-4 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:outline-none rounded-xl w-full box-border"
           required
           min="0"
         />
       </div>
       <div className="sell-form-grid">
-        <label className="field"><span>Your name</span><input required value={form.userName} onChange={(e) => update('userName', e.target.value)} /></label>
-        <label className="field"><span>Phone number</span><input required type="tel" value={form.customerPhone} onChange={(e) => update('customerPhone', e.target.value)} placeholder="10-digit mobile number" /></label>
-        <label className="field"><span>WhatsApp number</span><input required type="tel" value={form.whatsappNumber} onChange={(e) => update('whatsappNumber', e.target.value)} placeholder="For pickup/status updates" /></label>
-        <label className="field"><span>Email</span><input required type="email" value={form.customerEmail} onChange={(e) => update('customerEmail', e.target.value)} /></label>
-        <label className="field"><span>Full address</span><input required value={form.locationAddress} onChange={(e) => update('locationAddress', e.target.value)} placeholder="House / flat, street, area" /></label>
-        <label className="field"><span>City</span><input required value={form.locationCity} onChange={(e) => update('locationCity', e.target.value)} /></label>
-        <label className="field"><span>State</span><input required value={form.locationState} onChange={(e) => update('locationState', e.target.value)} /></label>
-        <label className="field"><span>Pincode</span><input required value={form.locationPincode} onChange={(e) => update('locationPincode', e.target.value)} /></label>
+        <div className="sell-field-group">
+          <label className="sell-field-label"><span>Your name</span></label>
+          <div className="sell-input-wrapper">
+            <input required value={form.userName} onChange={(e) => update('userName', e.target.value)} className="sell-input" />
+          </div>
+        </div>
+        <div className="sell-field-group">
+          <label className="sell-field-label"><span>Phone number</span></label>
+          <div className="sell-input-wrapper">
+            <input required type="tel" value={form.customerPhone} onChange={(e) => update('customerPhone', e.target.value)} placeholder="10-digit mobile number" className="sell-input" />
+          </div>
+        </div>
+        <div className="sell-field-group">
+          <label className="sell-field-label"><span>WhatsApp number</span></label>
+          <div className="sell-input-wrapper">
+            <input required type="tel" value={form.whatsappNumber} onChange={(e) => update('whatsappNumber', e.target.value)} placeholder="For pickup/status updates" className="sell-input" />
+          </div>
+        </div>
+        <div className="sell-field-group">
+          <label className="sell-field-label"><span>Email</span></label>
+          <div className="sell-input-wrapper">
+            <input required type="email" value={form.customerEmail} onChange={(e) => update('customerEmail', e.target.value)} className="sell-input" />
+          </div>
+        </div>
+        <div className="sell-field-group">
+          <label className="sell-field-label"><span>Full address</span></label>
+          <div className="sell-input-wrapper">
+            <input required value={form.locationAddress} onChange={(e) => update('locationAddress', e.target.value)} placeholder="House / flat, street, area" className="sell-input" />
+          </div>
+        </div>
+        <div className="sell-field-group">
+          <label className="sell-field-label"><span>City</span></label>
+          <div className="sell-input-wrapper">
+            <input required value={form.locationCity} onChange={(e) => update('locationCity', e.target.value)} className="sell-input" />
+          </div>
+        </div>
+        <div className="sell-field-group">
+          <label className="sell-field-label"><span>State</span></label>
+          <div className="sell-input-wrapper">
+            <input required value={form.locationState} onChange={(e) => update('locationState', e.target.value)} className="sell-input" />
+          </div>
+        </div>
+        <div className="sell-field-group">
+          <label className="sell-field-label"><span>Pincode</span></label>
+          <div className="sell-input-wrapper">
+            <input required value={form.locationPincode} onChange={(e) => update('locationPincode', e.target.value)} className="sell-input" />
+          </div>
+        </div>
       </div>
     </div>}
 

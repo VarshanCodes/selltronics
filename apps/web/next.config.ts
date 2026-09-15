@@ -7,6 +7,19 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(process.cwd(), '../..'),
   },
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ik.imagekit.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.simpleicons.org',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

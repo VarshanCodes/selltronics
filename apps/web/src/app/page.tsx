@@ -1,5 +1,5 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
+import Image from 'next/image';
 import HomeFeaturedProducts from '@/components/HomeFeaturedProducts';
 
 const categories = [
@@ -53,11 +53,11 @@ export default function HomePage() {
     </div></section>
     <div className="price-ticker"><div>Today&apos;s top quotes <b>iPhone 15 Pro Rs. 52,000</b> | MacBook Air M1 <b>Rs. 58,000</b> | iPad Air <b>Rs. 31,000</b> | Galaxy S24 <b>Rs. 39,000</b> | OnePlus 11 <b>Rs. 22,000</b></div></div>
 
-    <section id="devices" className="home-section"><div className="section-inner"><div className="section-head"><span>What are you selling?</span><h2>Your device still has value.</h2><p>Choose a category, tell us a little about the device, and get started in minutes.</p></div><div className="device-grid-home">{categories.map((item) => <Link href={`/sell?category=${encodeURIComponent(item.category)}`} className="device-category" key={item.name}><div><h3>{item.name}</h3><p>{item.sub}</p></div><span className="device-arrow" style={{ display: 'grid', placeItems: 'center' }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></span><div className="device-drawing"><img src={item.image} alt={item.name} /></div></Link>)}</div></div></section>
+    <section id="devices" className="home-section"><div className="section-inner"><div className="section-head"><span>What are you selling?</span><h2>Your device still has value.</h2><p>Choose a category, tell us a little about the device, and get started in minutes.</p></div><div className="device-grid-home">{categories.map((item) => <Link href={`/sell?category=${encodeURIComponent(item.category)}`} className="device-category" key={item.name}><div><h3>{item.name}</h3><p>{item.sub}</p></div><span className="device-arrow" style={{ display: 'grid', placeItems: 'center' }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></span><div className="device-drawing"><Image src={item.image} alt={item.name} width={110} height={110} sizes="(max-width: 580px) 95px, 110px" className="object-contain" /></div></Link>)}</div></div></section>
 
     <HomeFeaturedProducts />
 
-    <section className="home-section soft-section"><div className="section-inner"><div className="section-head centered"><span>Brands we work with</span><h2>The tech you know and love.</h2><p>We evaluate popular brands across phones, laptops, tablets, wearables, and more.</p></div><div className="brand-grid">{brands.map(([name, icon]) => <div key={name} className="brand-tile"><img src={`https://cdn.simpleicons.org/${icon}`} alt="" width="24" height="24"/>{name}</div>)}</div></div></section>
+    <section className="home-section soft-section"><div className="section-inner"><div className="section-head centered"><span>Brands we work with</span><h2>The tech you know and love.</h2><p>We evaluate popular brands across phones, laptops, tablets, wearables, and more.</p></div><div className="brand-grid">{brands.map(([name, icon]) => <div key={name} className="brand-tile"><Image src={`https://cdn.simpleicons.org/${icon}`} alt={name} width={24} height={24} className="object-contain" />{name}</div>)}</div></div></section>
 
     <section id="how" className="home-section"><div className="section-inner"><div className="section-head"><span>Simple, fast, fair</span><h2>How selling with Selltronics works</h2></div><div className="steps-grid">{steps.map(([number, title, text, icon]) => <article className="step-card" key={number}><b>{number}</b><span className="context-icon"><FeatureIcon type={icon}/></span><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>
 

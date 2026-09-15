@@ -117,7 +117,7 @@ export default function SellMacModal({ isOpen, onClose }: SellMacModalProps) {
             <form onSubmit={handleFinalSubmit} className="space-y-6 mt-6">
               <div>
                 <label className="block text-[0.85rem] font-semibold text-[#1E1B29] mb-2">Chip & Specs (Year/Processor)</label>
-                <input type="text" required value={modelName} onChange={(e) => setModelName(e.target.value)} placeholder="e.g. M2 2022 (8GB RAM, 256GB SSD)" className="w-full px-4 py-3.5 rounded-xl border-[1.5px] border-[#E3D9F9] focus:border-[#7C3AED] outline-none" />
+                <input type="text" required value={modelName} onChange={(e) => setModelName(e.target.value)} placeholder="e.g. M2 2022 (8GB RAM, 256GB SSD)" className="w-full h-12 min-h-[48px] px-4 py-3.5 rounded-xl border-[1.5px] border-[#E3D9F9] focus:border-[#7C3AED] focus:ring-2 focus:ring-purple-600 focus:outline-none text-[16px] sm:text-base box-border" />
               </div>
 
               <div>

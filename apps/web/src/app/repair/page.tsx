@@ -85,48 +85,6 @@ function prioritizeRecentRepairModels(category: string, brand: string, models: s
   });
 }
 
-export default function RepairPage() {
-  const [step, setStep] = useState<RepairStep>(1);
-  const [loading, setLoading] = useState(false);
-  const [successId, setSuccessId] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-  // Form states
-  const [selectedService, setSelectedService] = useState<string>('');
-  const [category, setCategory] = useState<string>('');
-  const [brand, setBrand] = useState<string>('');
-  const [modelName, setModelName] = useState<string>('');
-  const [modelsList, setModelsList] = useState<{ model: string }[]>([]);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
-  const [isShowingAllModels, setIsShowingAllModels] = useState<boolean>(false);
-  const [showAllBrands, setShowAllBrands] = useState<boolean>(false);
-
-  const [customerInfo, setCustomerInfo] = useState({
-    name: '',
-    phone: '',
-    whatsappNumber: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
-  });
-
-  // Track Auth state
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      if (user) {
-        setCustomerInfo((prev) => ({
-          ...prev,
-          name: prev.name || user.displayName || '',
-        }));
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
 function getFallbackRepairModels(category: string, brand: string): string[] {
   const catLower = category.toLowerCase();
   const brandLower = brand.toLowerCase();
@@ -271,6 +229,48 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
 
   return [];
 }
+
+export default function RepairPage() {
+  const [step, setStep] = useState<RepairStep>(1);
+  const [loading, setLoading] = useState(false);
+  const [successId, setSuccessId] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  // Form states
+  const [selectedService, setSelectedService] = useState<string>('');
+  const [category, setCategory] = useState<string>('');
+  const [brand, setBrand] = useState<string>('');
+  const [modelName, setModelName] = useState<string>('');
+  const [modelsList, setModelsList] = useState<{ model: string }[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
+  const [isShowingAllModels, setIsShowingAllModels] = useState<boolean>(false);
+  const [showAllBrands, setShowAllBrands] = useState<boolean>(false);
+
+  const [customerInfo, setCustomerInfo] = useState({
+    name: '',
+    phone: '',
+    whatsappNumber: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+  });
+
+  // Track Auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      if (user) {
+        setCustomerInfo((prev) => ({
+          ...prev,
+          name: prev.name || user.displayName || '',
+        }));
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Fetch exact retail names after the customer chooses a category and brand.
   useEffect(() => {
@@ -591,9 +591,10 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                       style={{
                         minHeight: 74,
                         padding: '10px 9px',
-                        border: '1px solid #E3D9F9',
+                        border: '1.5px solid #E3D9F9',
                         borderRadius: 12,
                         background: '#fff',
+                        boxSizing: 'border-box',
                         display: 'grid',
                         placeItems: 'center',
                         gap: 6,
@@ -601,11 +602,13 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                         cursor: 'pointer'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.border = '2px solid var(--violet-700)';
+                        e.currentTarget.style.borderColor = 'var(--violet-700)';
+                        e.currentTarget.style.boxShadow = '0 0 0 2px rgba(124, 58, 237, 0.25)';
                         e.currentTarget.style.background = 'var(--lavender-100)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.border = '1px solid #E3D9F9';
+                        e.currentTarget.style.borderColor = '#E3D9F9';
+                        e.currentTarget.style.boxShadow = 'none';
                         e.currentTarget.style.background = '#fff';
                       }}
                     >
@@ -687,7 +690,9 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                           }}
                           style={{
                             padding: '16px',
-                            border: modelName === item.model ? '2px solid var(--violet-700)' : '1px solid #E3D9F9',
+                            border: '1.5px solid ' + (modelName === item.model ? 'var(--violet-700)' : '#E3D9F9'),
+                            boxShadow: modelName === item.model ? '0 0 0 2px rgba(124, 58, 237, 0.25)' : 'none',
+                            boxSizing: 'border-box',
                             borderRadius: 12,
                             background: modelName === item.model ? 'var(--lavender-100)' : '#fff',
                             textAlign: 'left',
@@ -740,7 +745,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                         placeholder="e.g. iPhone 13 Pro Max"
                         value={modelName}
                         onChange={(e) => setModelName(e.target.value)}
-                        className="w-full border border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] text-[#1E1B29] font-medium"
+                        className="w-full h-12 min-h-[48px] border-[1.5px] border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-purple-600 text-[16px] sm:text-base text-[#1E1B29] font-medium box-border"
                       />
                     </div>
                   </div>
@@ -887,7 +892,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                         required
                         value={customerInfo.name}
                         onChange={(e) => setCustomerInfo((prev) => ({ ...prev, name: e.target.value }))}
-                        className="border border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] text-[#1E1B29] font-medium"
+                        className="w-full h-12 min-h-[48px] border-[1.5px] border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-purple-600 text-[16px] text-[#1E1B29] font-medium box-border"
                       />
                     </div>
 
@@ -899,7 +904,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                         placeholder="10-digit mobile number"
                         value={customerInfo.phone}
                         onChange={(e) => setCustomerInfo((prev) => ({ ...prev, phone: e.target.value }))}
-                        className="border border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] text-[#1E1B29] font-medium"
+                        className="w-full h-12 min-h-[48px] border-[1.5px] border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-purple-600 text-[16px] text-[#1E1B29] font-medium box-border"
                       />
                     </div>
 
@@ -911,7 +916,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                         placeholder="WhatsApp number for booking updates"
                         value={customerInfo.whatsappNumber}
                         onChange={(e) => setCustomerInfo((prev) => ({ ...prev, whatsappNumber: e.target.value }))}
-                        className="border border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] text-[#1E1B29] font-medium"
+                        className="w-full h-12 min-h-[48px] border-[1.5px] border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-purple-600 text-[16px] text-[#1E1B29] font-medium box-border"
                       />
                     </div>
 
@@ -923,7 +928,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                         placeholder="6-digit PIN code"
                         value={customerInfo.pincode}
                         onChange={(e) => setCustomerInfo((prev) => ({ ...prev, pincode: e.target.value }))}
-                        className="border border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] text-[#1E1B29] font-medium"
+                        className="w-full h-12 min-h-[48px] border-[1.5px] border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-purple-600 text-[16px] text-[#1E1B29] font-medium box-border"
                       />
                     </div>
 
@@ -935,7 +940,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                         placeholder="Flat, House No, Building, Street, Area"
                         value={customerInfo.address}
                         onChange={(e) => setCustomerInfo((prev) => ({ ...prev, address: e.target.value }))}
-                        className="border border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] text-[#1E1B29] font-medium"
+                        className="w-full h-12 min-h-[48px] border-[1.5px] border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-purple-600 text-[16px] text-[#1E1B29] font-medium box-border"
                       />
                     </div>
 
@@ -946,7 +951,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                         required
                         value={customerInfo.city}
                         onChange={(e) => setCustomerInfo((prev) => ({ ...prev, city: e.target.value }))}
-                        className="border border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] text-[#1E1B29] font-medium"
+                        className="w-full h-12 min-h-[48px] border-[1.5px] border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-purple-600 text-[16px] text-[#1E1B29] font-medium box-border"
                       />
                     </div>
 
@@ -957,7 +962,7 @@ function getFallbackRepairModels(category: string, brand: string): string[] {
                         required
                         value={customerInfo.state}
                         onChange={(e) => setCustomerInfo((prev) => ({ ...prev, state: e.target.value }))}
-                        className="border border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] text-[#1E1B29] font-medium"
+                        className="w-full h-12 min-h-[48px] border-[1.5px] border-[#E3D9F9] rounded-xl p-3 outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-purple-600 text-[16px] text-[#1E1B29] font-medium box-border"
                       />
                     </div>
                   </div>

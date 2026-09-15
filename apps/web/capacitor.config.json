@@ -3,9 +3,10 @@
   "appName": "SellTronics",
   "webDir": "public",
   "server": {
-    "url": "https://selltronics.store",
+    "url": "https://www.selltronics.store",
     "cleartext": false,
     "allowNavigation": [
+      "www.selltronics.store",
       "selltronics.store",
       "*.selltronics.store"
     ]

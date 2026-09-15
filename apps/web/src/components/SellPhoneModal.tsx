@@ -144,7 +144,7 @@ export default function SellPhoneModal({ isOpen, onClose }: SellPhoneModalProps)
                   type="text" required 
                   value={modelName} onChange={(e) => setModelName(e.target.value)}
                   placeholder="e.g. iPhone 13 Pro Max (128GB)" 
-                  className="w-full px-4 py-3.5 rounded-xl border-[1.5px] border-[#E3D9F9] focus:border-[#7C3AED] outline-none" 
+                  className="w-full h-12 min-h-[48px] px-4 py-3.5 rounded-xl border-[1.5px] border-[#E3D9F9] focus:border-[#7C3AED] focus:ring-2 focus:ring-purple-600 focus:outline-none text-[16px] sm:text-base box-border" 
                 />
               </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -16,7 +17,18 @@ const links = [
 ];
 
 function BrandMark() {
-  return <span className="brand-mark" aria-hidden="true"><img src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-30_18-01-53-939.png" alt="" /></span>;
+  return (
+    <span className="brand-mark" aria-hidden="true">
+      <Image
+        src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-30_18-01-53-939.png"
+        alt="Selltronics"
+        width={34}
+        height={34}
+        priority
+        className="w-full h-full object-contain"
+      />
+    </span>
+  );
 }
 
 function CloseIcon() {
@@ -91,8 +103,13 @@ export default function Navbar() {
               </Link>
               <a href="https://www.asteroic.com/" target="_blank" rel="noreferrer" className="drawer-powered" aria-label="Powered by Asteroic">
                 <small>Powered by</small>
-                {/* eslint-disable-next-line @next/next/no-img-element -- external brand image */}
-                <img src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-02_11-34-44-246.png?updatedAt=1782972404250" alt="Asteroic logo" />
+                <Image
+                  src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-02_11-34-44-246.png?updatedAt=1782972404250"
+                  alt="Asteroic logo"
+                  width={26}
+                  height={26}
+                  className="rounded"
+                />
                 <b>asteroic</b>
               </a>
             </div>
