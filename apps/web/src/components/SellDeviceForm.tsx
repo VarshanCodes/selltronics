@@ -6,6 +6,7 @@ import { addDoc, collection, doc, serverTimestamp, setDoc, getDoc } from 'fireba
 import { User } from 'firebase/auth';
 import { auth, db, handleGoogleLogin } from '../config/firebase';
 import { getLiveModelsAndPrices, getSingleModelPrice } from '@/app/actions/pricingEngine';
+import PhoneModelSelector from './PhoneModelSelector';
 
 type DeviceType = 'Smartphones' | 'Laptops' | 'Tablets' | 'Mac' | 'Other devices';
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -688,6 +689,8 @@ export default function SellDeviceForm() {
     deviceType: initialCategory,
     brand: '',
     deviceName: '',
+    series: '',
+    deviceImage: '',
     storage: '',
     ram: '',
     specs: '',
@@ -1008,6 +1011,8 @@ export default function SellDeviceForm() {
         deviceType: form.deviceType || '',
         brand: form.brand || '',
         deviceName: form.deviceName || '',
+        series: form.series || '',
+        deviceImage: form.deviceImage || '',
         storage: form.storage || '',
         ram: form.ram || '',
         specs: form.specs || '',
@@ -1097,7 +1102,7 @@ export default function SellDeviceForm() {
   }
 
   return <form onSubmit={submit} className="sell-form-card">
-    <div className="sell-form-heading">
+    {!(step === 2 && form.deviceType === 'Smartphones') && <div className="sell-form-heading">
       <span className="eyebrow">{currentCopy.eyebrow}</span>
       <h2>{
         step === 1 ? currentCopy.title : 
@@ -1121,12 +1126,12 @@ export default function SellDeviceForm() {
         step === 8 ? 'Please sign in with Google to secure your pickup request.' : 
         'Confirm your expected price and enter your location details.'
       }</p>
-    </div>
+    </div>}
 
     {step === 1 && <div style={{ marginTop: 22 }}>
       <div className="sell-benefits" style={{ justifyContent: 'flex-start', marginTop: 0, marginBottom: 22 }}>{benefits.map((item) => <span key={item}>{item}</span>)}</div>
       <div className="field w-full shrink-0"><span>{currentCopy.brandLabel}</span><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(118px, 1fr))', gap: 10, marginTop: 8 }}>
-        {((showAllBrands || currentCopy.brands.length <= 4) ? currentCopy.brands : currentCopy.brands.slice(0, 4)).map((item) => <button key={item.name} type="button" onClick={() => update('brand', item.name)} style={{ minHeight: 74, padding: '10px 9px', border: '1.5px solid ' + (form.brand === item.name ? 'var(--violet-700)' : '#E3D9F9'), boxShadow: form.brand === item.name ? '0 0 0 2px rgba(124, 58, 237, 0.25)' : 'none', boxSizing: 'border-box', borderRadius: 12, background: form.brand === item.name ? 'var(--lavender-100)' : '#fff', display: 'grid', placeItems: 'center', gap: 6, fontWeight: 700, cursor: 'pointer' }}>{item.logo ? (
+        {((showAllBrands || currentCopy.brands.length <= 4) ? currentCopy.brands : currentCopy.brands.slice(0, 4)).map((item) => <button key={item.name} type="button" onClick={() => { update('brand', item.name); if (form.deviceType === 'Smartphones') setStep(2); }} style={{ minHeight: 74, padding: '10px 9px', border: '1.5px solid ' + (form.brand === item.name ? 'var(--violet-700)' : '#E3D9F9'), boxShadow: form.brand === item.name ? '0 0 0 2px rgba(124, 58, 237, 0.25)' : 'none', boxSizing: 'border-box', borderRadius: 12, background: form.brand === item.name ? 'var(--lavender-100)' : '#fff', display: 'grid', placeItems: 'center', gap: 6, fontWeight: 700, cursor: 'pointer' }}>{item.logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={item.logo} alt="" width="24" height="24" />
       ) : <b>{item.mark}</b>}<span style={{ margin: 0 }}>{item.name}</span></button>)}
@@ -1154,7 +1159,32 @@ export default function SellDeviceForm() {
       </div></div>
     </div>}
 
-    {step === 2 && <div className="sell-form-grid">
+    {step === 2 && (
+      form.deviceType === 'Smartphones' ? (
+        <PhoneModelSelector
+          brand={form.brand}
+          mode="sell"
+          initialModel={form.deviceName}
+          initialRam={form.ram}
+          initialStorage={form.storage}
+          initialVariant={form.specs}
+          initialImage={form.deviceImage}
+          onSelect={({ model, series, image, ram, storage, variant }) => {
+            setForm((current) => ({
+              ...current,
+              deviceName: model,
+              series: series,
+              deviceImage: image,
+              ram: ram,
+              storage: storage,
+              specs: variant || current.specs,
+            }));
+            setStep(3);
+          }}
+          onBack={() => setStep(1)}
+        />
+      ) : (
+        <div className="sell-form-grid">
       {/* 1. Phone / Device Model Name */}
       <div className="sell-field-group">
         <label htmlFor="sell-device-name" className="sell-field-label">
@@ -1270,7 +1300,8 @@ export default function SellDeviceForm() {
           />
         </div>
       </div>
-    </div>}
+    </div>
+  ))}
 
     {step === 3 && <div style={{ marginTop: 22 }}>{currentQuestions.map(([key, title, hint]) => <div className="field" key={key} style={{ marginBottom: 18 }}><span>{title}</span><small>{hint}</small><div style={{ display: 'flex', gap: 10, marginTop: 8 }}>{['Yes', 'No'].map((answer) => <button type="button" key={answer} onClick={() => setForm((current) => ({ ...current, conditionAnswers: { ...current.conditionAnswers, [key]: answer } }))} className={form.conditionAnswers[key] === answer ? 'btn-primary' : 'btn-ghost'}>{answer}</button>)}</div></div>)}</div>}
 
@@ -1445,7 +1476,7 @@ export default function SellDeviceForm() {
     </div>}
 
     {error && <p className="track-error">{error}</p>}
-    <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+    {!(step === 2 && form.deviceType === 'Smartphones') && <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
       {step > 1 && <button className="btn-ghost" type="button" onClick={goBack}>Back</button>}
       {step < 8 && step !== 7 ? (
         canContinue && (
@@ -1470,6 +1501,6 @@ export default function SellDeviceForm() {
           </button>
         )
       )}
-    </div>
+    </div>}
   </form>;
 }

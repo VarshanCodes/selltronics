@@ -57,7 +57,7 @@ export default function HomePage() {
 
     <HomeFeaturedProducts />
 
-    <section className="home-section soft-section"><div className="section-inner"><div className="section-head centered"><span>Brands we work with</span><h2>The tech you know and love.</h2><p>We evaluate popular brands across phones, laptops, tablets, wearables, and more.</p></div><div className="brand-grid">{brands.map(([name, icon]) => <div key={name} className="brand-tile"><Image src={`https://cdn.simpleicons.org/${icon}`} alt={name} width={24} height={24} className="object-contain" />{name}</div>)}</div></div></section>
+    <section className="home-section soft-section"><div className="section-inner"><div className="section-head centered"><span>Brands we work with</span><h2>The tech you know and love.</h2><p>We evaluate popular brands across phones, laptops, tablets, wearables, and more.</p></div><div className="brand-grid">{brands.map(([name, icon]) => <div key={name} className="brand-tile"><Image src={`https://cdn.simpleicons.org/${icon}`} alt={name} width={24} height={24} unoptimized className="object-contain" />{name}</div>)}</div></div></section>
 
     <section id="how" className="home-section"><div className="section-inner"><div className="section-head"><span>Simple, fast, fair</span><h2>How selling with Selltronics works</h2></div><div className="steps-grid">{steps.map(([number, title, text, icon]) => <article className="step-card" key={number}><b>{number}</b><span className="context-icon"><FeatureIcon type={icon}/></span><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>
 

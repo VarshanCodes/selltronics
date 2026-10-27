@@ -5,6 +5,7 @@ import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/fires
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, handleGoogleLogin } from '@/config/firebase';
 import { getRepairDeviceModels } from '@/app/actions/repairEngine';
+import PhoneModelSelector from '@/components/PhoneModelSelector';
 
 type RepairStep = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -242,6 +243,11 @@ export default function RepairPage() {
   const [category, setCategory] = useState<string>('');
   const [brand, setBrand] = useState<string>('');
   const [modelName, setModelName] = useState<string>('');
+  const [deviceSeries, setDeviceSeries] = useState<string>('');
+  const [deviceImage, setDeviceImage] = useState<string>('');
+  const [deviceRam, setDeviceRam] = useState<string>('');
+  const [deviceStorage, setDeviceStorage] = useState<string>('');
+  const [deviceVariant, setDeviceVariant] = useState<string>('');
   const [modelsList, setModelsList] = useState<{ model: string }[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
@@ -380,6 +386,13 @@ export default function RepairPage() {
         deviceBrand: brand || '',
         model: modelName || '',
         deviceModel: modelName || '',
+        series: deviceSeries || '',
+        deviceSeries: deviceSeries || '',
+        image: deviceImage || '',
+        deviceImage: deviceImage || '',
+        ram: deviceRam || '',
+        storage: deviceStorage || '',
+        variant: deviceVariant || '',
         addons,
         customerName: customerInfo.name || '',
         customerPhone: customerInfo.phone || '',
@@ -431,7 +444,7 @@ export default function RepairPage() {
                 'Select Service',
                 'Select Category',
                 'Select Brand',
-                'Select Model',
+                category === 'Smartphones' ? 'Select Phone & Specs' : 'Select Model',
                 'Frequently Added Together',
                 'Booking Details'
               ][step - 1]}
@@ -458,6 +471,12 @@ export default function RepairPage() {
               onClick={() => {
                 setSuccessId(null);
                 setStep(1);
+                setModelName('');
+                setDeviceSeries('');
+                setDeviceImage('');
+                setDeviceRam('');
+                setDeviceStorage('');
+                setDeviceVariant('');
                 setSelectedService('');
                 setCategory('');
                 setBrand('');
@@ -584,6 +603,11 @@ export default function RepairPage() {
                       onClick={() => {
                         setBrand(item.name);
                         setModelName('');
+                        setDeviceSeries('');
+                        setDeviceImage('');
+                        setDeviceRam('');
+                        setDeviceStorage('');
+                        setDeviceVariant('');
                         setModelsList([]);
                         setIsShowingAllModels(false);
                         setStep(4);
@@ -660,8 +684,29 @@ export default function RepairPage() {
             </div>
           )}
 
-          {/* STEP 4: MODEL SELECTION - CLICKABLE CARDS AND MANUAL FALLBACK */}
+          {/* STEP 4: MODEL SELECTION */}
           {step === 4 && (
+            category === 'Smartphones' ? (
+              <PhoneModelSelector
+                brand={brand}
+                mode="repair"
+                initialModel={modelName}
+                initialRam={deviceRam}
+                initialStorage={deviceStorage}
+                initialVariant={deviceVariant}
+                initialImage={deviceImage}
+                onSelect={({ model, series, image, ram, storage, variant }) => {
+                  setModelName(model);
+                  setDeviceSeries(series);
+                  setDeviceImage(image);
+                  setDeviceRam(ram);
+                  setDeviceStorage(storage);
+                  setDeviceVariant(variant || '');
+                  setStep(5);
+                }}
+                onBack={() => setStep(3)}
+              />
+            ) : (
             <div>
               <div className="flex items-center justify-between border-b border-[#F0EAFB] pb-3 mb-6">
                 <h2 className="text-xl font-bold text-[#1E1B29]">Select Device Model</h2>
@@ -771,6 +816,7 @@ export default function RepairPage() {
                 </button>
               </div>
             </div>
+            )
           )}
 
           {/* STEP 5: UPSELL & ADD-ONS */}
