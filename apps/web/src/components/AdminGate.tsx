@@ -1,6 +1,8 @@
 'use client';
 
 import { FormEvent, ReactNode, useEffect, useState } from 'react';
+import Image from 'next/image';
+import BrandLogo from './BrandLogo';
 
 export default function AdminGate({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -18,7 +20,9 @@ export default function AdminGate({ children }: { children: ReactNode }) {
   return (
     <main className="admin-gate">
       <form className="admin-gate-card" onSubmit={unlock}>
-        <span>Selltronics</span>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+          <BrandLogo priority size="lg" />
+        </div>
         <h1>Admin access</h1>
         <p>Enter the administrator password to continue.</p>
         <label className="field" style={{ display: 'block', position: 'relative' }}>

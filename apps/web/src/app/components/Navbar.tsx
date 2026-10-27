@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import BrandLogo, { BrandMark, LOGO_ICON_URL, LOGO_TEXT_URL } from '@/components/BrandLogo';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { createPortal } from 'react-dom';
@@ -16,20 +17,7 @@ const links = [
   { label: 'Why Selltronics', href: '/#why' },
 ];
 
-function BrandMark() {
-  return (
-    <span className="brand-mark" aria-hidden="true">
-      <Image
-        src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-30_18-01-53-939.png"
-        alt="Selltronics"
-        width={34}
-        height={34}
-        priority
-        className="w-full h-full object-contain"
-      />
-    </span>
-  );
-}
+export { BrandLogo, BrandMark, LOGO_ICON_URL, LOGO_TEXT_URL };
 
 function CloseIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>;
@@ -98,16 +86,14 @@ export default function Navbar() {
         <aside ref={drawerRef} id={drawerId} className="site-drawer" aria-label="Navigation menu" aria-modal="true" role="dialog">
           <div className="drawer-head">
             <div className="drawer-brand-wrapper">
-              <Link href="/" className="site-logo" onClick={close}>
-                <BrandMark /> <span>Selltronics</span>
+              <Link href="/" className="site-logo" onClick={close} aria-label="Selltronics">
+                <BrandLogo />
               </Link>
               <a href="https://www.asteroic.com/" target="_blank" rel="noreferrer" className="drawer-powered" aria-label="Powered by Asteroic">
                 <small>Powered by</small>
                 <Image
                   src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-02_11-34-44-246.png?updatedAt=1782972404250"
-                  alt="Asteroic logo"
-                  width={26}
-                  height={26}
+                  alt="Asteroic logo" width={20} height={20}
                   className="rounded"
                 />
                 <b>asteroic</b>
@@ -134,10 +120,10 @@ export default function Navbar() {
     <header className="site-nav bg-white" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="site-nav-inner">
       <div className="header-brand-wrapper">
-        <Link href="/" className="site-logo">
-          <BrandMark /> <span>Selltronics</span>
+        <Link href="/" className="site-logo" aria-label="Selltronics">
+          <BrandLogo priority />
         </Link>
-      </div>
+        </div>
       <nav className="site-nav-links" aria-label="Primary navigation">
         {links.map((link) => <Link key={link.href} href={link.href} className={isActive(link.href) ? 'active' : ''} aria-current={isActive(link.href) ? 'page' : undefined}>{link.label}</Link>)}
       </nav>

@@ -309,7 +309,7 @@ export default function PhoneModelSelector({
                           {series.models.length}
                         </span>
                       </div>
-                      
+
                       {latestModel && (
                         <div className="mt-1 flex items-center gap-1.5">
                           <span className="text-[10px] sm:text-[11px] font-bold text-[#5B21B6] bg-[#F3ECFF] px-2 py-0.5 rounded-md border border-[#E3D9F9] truncate max-w-full">
@@ -659,11 +659,10 @@ export default function PhoneModelSelector({
                   key={opt}
                   type="button"
                   onClick={() => setStorage(opt)}
-                  className={`py-3 px-2 text-center rounded-xl font-bold text-xs sm:text-sm border-2 transition-all cursor-pointer ${
-                    isSelected
+                  className={`py-3 px-2 text-center rounded-xl font-bold text-xs sm:text-sm border-2 transition-all cursor-pointer ${isSelected
                       ? 'border-[#7C3AED] bg-[#5B21B6] text-white shadow-sm'
                       : 'border-[#E3D9F9] bg-white text-[#1E1B29] hover:bg-[#FAF7FF] hover:border-[#7C3AED]'
-                  }`}
+                    }`}
                 >
                   {opt}
                 </button>
@@ -685,11 +684,10 @@ export default function PhoneModelSelector({
                   key={opt}
                   type="button"
                   onClick={() => setRam(opt)}
-                  className={`py-3 px-2 text-center rounded-xl font-bold text-xs sm:text-sm border-2 transition-all cursor-pointer ${
-                    isSelected
+                  className={`py-3 px-2 text-center rounded-xl font-bold text-xs sm:text-sm border-2 transition-all cursor-pointer ${isSelected
                       ? 'border-[#7C3AED] bg-[#5B21B6] text-white shadow-sm'
                       : 'border-[#E3D9F9] bg-white text-[#1E1B29] hover:bg-[#FAF7FF] hover:border-[#7C3AED]'
-                  }`}
+                    }`}
                 >
                   {opt}
                 </button>

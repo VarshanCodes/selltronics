@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import BrandLogo from '@/components/BrandLogo';
 import { clearAdminAccess } from '@/components/AdminGate';
 
 export default function AdminNav() {
@@ -19,9 +21,8 @@ export default function AdminNav() {
     <>
       <header className="nav">
         <div className="nav-inner">
-          <Link href="/admin" className="logo">
-            <div className="mark"><img src="https://ik.imagekit.io/e8vtmc5nh/Picsart_26-07-30_18-01-53-939.png" alt="Selltronics" /></div>
-            Selltronics
+          <Link href="/admin" className="logo" aria-label="Selltronics Admin">
+            <BrandLogo priority />
           </Link>
 
           <nav className="links" style={{ display: 'flex', gap: '32px' }}>

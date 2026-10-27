@@ -7,6 +7,18 @@ import BottomMobileNav from "./components/BottomMobileNav";
 export const metadata: Metadata = {
   title: "SellTronics | Buy & Sell Used Electronics",
   description: "The premium re-commerce platform for your devices.",
+  icons: {
+    icon: [
+      { url: 'https://ik.imagekit.io/mzpoxy1gg/Picsart_26-10-27_16-51-36-713.png' },
+      { url: '/icon.png' },
+      { url: '/favicon.ico' },
+    ],
+    apple: [
+      { url: 'https://ik.imagekit.io/mzpoxy1gg/Picsart_26-10-27_16-51-36-713.png' },
+      { url: '/apple-icon.png' },
+    ],
+    shortcut: ['https://ik.imagekit.io/mzpoxy1gg/Picsart_26-10-27_16-51-36-713.png'],
+  },
 };
 
 export const viewport: Viewport = {

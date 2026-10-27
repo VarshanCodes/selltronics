@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import BrandLogo from './BrandLogo';
 // Import the database function
 import { submitSellOrder } from "../db"; 
 
@@ -82,11 +83,8 @@ export default function SellLaptopModal({ isOpen, onClose }: SellLaptopModalProp
   return (
     <div className={`fixed inset-0 z-[96] bg-white overflow-y-auto transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? 'translate-y-0 opacity-100 pointer-events-auto' : 'translate-y-6 opacity-0 pointer-events-none'}`}>
       <div className="flex items-center justify-between px-6 py-4.5 border-b border-[#EFE9FB] sticky top-0 bg-white z-10">
-        <div className="flex items-center gap-2.5 font-space font-bold text-[1.1rem] text-[#1E1B29]">
-          <div className="w-[30px] h-[30px] rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#1B0F33] flex items-center justify-center text-white">
-            <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4"><path d="M8 3h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.8"/></svg>
-          </div>
-          SellTronics
+        <div className="flex items-center">
+          <BrandLogo size="sm" />
         </div>
         <button onClick={handleClose} className="w-[38px] h-[38px] rounded-full border-[1.5px] border-[#E3D9F9] flex items-center justify-center hover:bg-[#F3ECFF] transition-colors cursor-pointer">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>

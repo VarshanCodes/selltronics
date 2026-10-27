@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import BrandLogo from "@/components/BrandLogo";
 import { useState } from "react";
 
 export default function Header() {
@@ -13,14 +15,8 @@ export default function Header() {
         <div className="max-w-[1180px] mx-auto flex items-center justify-between px-6 py-3.5">
           
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 font-space font-bold text-[1.35rem] text-[#1E1B29]">
-            <div className="w-[34px] h-[34px] rounded-[9px] bg-gradient-to-br from-[#7C3AED] to-[#1B0F33] flex items-center justify-center text-white">
-              <svg viewBox="0 0 24 24" fill="none" className="w-[18px] h-[18px]">
-                <path d="M8 3h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.8" />
-                <path d="M11 18h2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-            </div>
-            SellTronics
+          <Link href="/" className="flex items-center" aria-label="Selltronics">
+            <BrandLogo priority />
           </Link>
 
           {/* Desktop Links */}
