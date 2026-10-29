@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import Navbar from "./components/Navbar";
 import Footer from "../components/Footer";
 import BottomMobileNav from "./components/BottomMobileNav";
@@ -47,6 +48,7 @@ export default function RootLayout({
         
         <Footer />
         <BottomMobileNav />
+        <Analytics />
       </body>
     </html>
   );
